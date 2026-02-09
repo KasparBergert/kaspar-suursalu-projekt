@@ -1,7 +1,7 @@
 
 
-API design
-View image
+API design<br>
+_View image in directory_
 
 Tech stack
 
@@ -10,40 +10,41 @@ Tech stack
 - express.js
 - bun
 
+---
 
+# MVP goal
+A minimal Q&A platform where users can ask questions, answer them, and vote on content. No advanced moderation, recommendation, or gamification features.
 
-**Functionality**
+Core functionality
+## Authentication
+Users can create an account using email and password, log in, and log out. No password recovery.
 
-1. **User registration +** 
-    - Create an account (email + password)
-    - Log in / log out
+## User profiles
+Each user has a simple profile containing a username/display name and a list of questions they have asked. No profile customization or follower system.
 
-2. **User profile +** 
-    - Username or display name
-    - Simple profile page showing user’s questions
+## Asking questions
+Authenticated users can create a question consisting of a title and body text. Questions are stored and publicly visible.
 
-3. **Ask a question **
-    - Creating a question
+## Question listing
+The home page displays all questions in reverse chronological order (highest votes first). Users can upvote questions to signal relevance.
 
-4. **List questions**
-    - Page showing all questions (newest first)
-    - upvote a question
+## Answering questions
+Authenticated users can submit answers on a question’s detail page. Answers are stored in the database and linked to the question and author.
 
-5. **Answer a question**
-    - Input box under question for answers
-    - Save to database
+## Viewing answers
+Each question page shows all submitted answers, including author name and timestamp. No sorting beyond default order.
 
-6. **View answers**
-    - Display all answers for a question on its detail page
-    - Show author and timestamp
+## Voting
+Users can upvote (optionally downvote) both questions and answers. Vote counts are displayed, with basic prevention of multiple votes per user.
 
-7. **Basic interaction**
-    - Upvote (and optionally downvote) answers
-    - Display vote count
+## Navigation
+Basic navigation includes:
 
-8. **Navigation**
-    - Home (question list)
-    - Ask Question
-    - Profile
-    - Log in / Log out
+##Home (question list)
+Ask Question
+Profile
+Log in / Log out
+
+Explicit non-goals (out of MVP scope)
+No tags, comments, moderation tools, notifications, search, ranking algorithms, badges, reputation system, or content recommendations.
 
