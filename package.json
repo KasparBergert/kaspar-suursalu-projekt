@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "server": "bun run --watch server/server.ts",
+    "seed": "bun run server/prisma/seed.ts",
     "test": "vitest"
   },
   "repository": {
