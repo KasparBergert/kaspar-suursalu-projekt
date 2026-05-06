@@ -1,0 +1,42 @@
+{
+  "name": "quora-copy",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/KasparBergert/kaspar-suursalu-projekt#readme",
+  "bugs": {
+    "url": "https://github.com/KasparBergert/kaspar-suursalu-projekt/issues"
+  },
+  "scripts": {
+    "dev": "vite",
+    "server": "bun run --watch server.ts",
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KasparBergert/kaspar-suursalu-projekt.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@vitejs/plugin-vue": "^6.0.6"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@prisma/adapter-mariadb": "^7.7.0",
+    "@prisma/client": "^7.7.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "prisma": "^7.7.0",
+    "vite": "^8.0.8",
+    "vitest": "^4.1.4",
+    "vue": "^3.5.32"
+  }
+}
