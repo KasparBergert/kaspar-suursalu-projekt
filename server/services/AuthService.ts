@@ -20,7 +20,6 @@ export class AuthService {
     async register(data: unknown): Promise<AuthResult> {
         assertRegisterData(data);
         
-        console.log(data.email)
         const existingUser = await prisma.users.findUnique({
             where: {
                 email: data.email,
@@ -67,6 +66,10 @@ export class AuthService {
         }
 
         return this.createAuthResult(user);
+    }
+
+    async logout(token: string): Promise<void> {
+        await this.tokenService.reset(token);
     }
 
     private async createAuthResult(user: UsersModel): Promise<AuthResult> {

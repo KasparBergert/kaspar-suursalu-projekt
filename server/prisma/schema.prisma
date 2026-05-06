@@ -8,22 +8,24 @@ datasource db {
 }
 
 model Users {
-    id        String     @id @default(uuid())
-    name      String
-    email     String     @unique
-    password  String
-    questions Questions[]
-    comments  Comments[]
+    id              String             @id @default(uuid())
+    name            String
+    email           String             @unique
+    password        String
+    questions       Questions[]
+    comments        Comments[]
+    questionUpvotes QuestionUpvotes[]
 }
 
 model Questions {
-    id          String    @id @default(uuid())
+    id          String             @id @default(uuid())
     userId      String
     title       String
     description String
-    upvotes     Int       @default(0)
+    upvotes     Int                @default(0)
     comments    Comments[]
-    user        Users     @relation(fields: [userId], references: [id])
+    upvotedBy   QuestionUpvotes[]
+    user        Users              @relation(fields: [userId], references: [id])
 }
 
 model Comments {
@@ -34,4 +36,15 @@ model Comments {
     createdAt  DateTime  @default(now())
     question   Questions @relation(fields: [questionId], references: [id])
     user       Users     @relation(fields: [userId], references: [id])
+}
+
+model QuestionUpvotes {
+    id         String    @id @default(uuid())
+    userId     String
+    questionId String
+    createdAt  DateTime  @default(now())
+    user       Users     @relation(fields: [userId], references: [id])
+    question   Questions @relation(fields: [questionId], references: [id])
+
+    @@unique([userId, questionId])
 }

@@ -22,4 +22,13 @@ describe('JwtTokenService', () => {
 
         await expect(new JwtTokenService('other-secret').validate(token)).rejects.toThrow();
     });
+
+    it('rejects a token after it has been reset', async () => {
+        const tokenService = new JwtTokenService('secret');
+        const token = await tokenService.create(user);
+
+        await tokenService.reset(token);
+
+        await expect(tokenService.validate(token)).rejects.toThrow('Token has been reset.');
+    });
 });

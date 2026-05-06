@@ -20,11 +20,17 @@ class IntegrationPasswordHasher implements PasswordHasher {
 }
 
 class IntegrationTokenService implements TokenService {
+    private readonly resetTokens = new Set<string>();
+
     async create(user: AuthUser): Promise<string> {
         return `token:${user.id}`;
     }
 
     async validate(token: string): Promise<AuthUser> {
+        if (this.resetTokens.has(token)) {
+            throw new Error('Token has been reset.');
+        }
+
         const id = token.replace('token:', '');
 
         return {
@@ -32,6 +38,11 @@ class IntegrationTokenService implements TokenService {
             name: 'Integration User',
             email: 'integration@example.com',
         };
+    }
+
+    async reset(token: string): Promise<void> {
+        await this.validate(token);
+        this.resetTokens.add(token);
     }
 }
 

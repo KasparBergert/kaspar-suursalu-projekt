@@ -188,6 +188,63 @@ export class QuestionsService {
             },
         };
     }
+
+    async upVoteQuestion(userId: string, questionId: string): Promise<QuestionData> {
+        const existingUpvote = await prisma.questionUpvotes.findUnique({
+            where: {
+                userId_questionId: {
+                    userId,
+                    questionId,
+                },
+            },
+        });
+
+        if (existingUpvote) {
+            throw new Error('Question has already been upvoted by this user.');
+        }
+
+        const question = await prisma.$transaction(async (tx) => {
+            await tx.questionUpvotes.create({
+                data: {
+                    userId,
+                    questionId,
+                },
+            });
+
+            return tx.questions.update({
+                where: {
+                    id: questionId,
+                },
+                data: {
+                    upvotes: {
+                        increment: 1,
+                    },
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
+                    _count: {
+                        select: {
+                            comments: true,
+                        },
+                    },
+                },
+            });
+        });
+
+        return {
+            id: question.id,
+            title: question.title,
+            description: question.description,
+            upvotes: question.upvotes,
+            commentCount: question._count.comments,
+            user: question.user,
+        };
+    }
 }
 
 function normalizePage(page: number): number {

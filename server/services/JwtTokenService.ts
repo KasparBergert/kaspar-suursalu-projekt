@@ -3,6 +3,8 @@ import { assertAuthUser } from '../assertions/UserAssertions.ts';
 import type { AuthUser, TokenService } from '../interfaces/UserInterfaces.ts';
 
 export class JwtTokenService implements TokenService {
+    private readonly resetTokens = new Set<string>();
+
     constructor(
         private readonly secret: string,
         private readonly expiresIn = '1h',
@@ -23,6 +25,10 @@ export class JwtTokenService implements TokenService {
     }
     
     async validate(token: string): Promise<AuthUser> {
+        if (this.resetTokens.has(token)) {
+            throw new Error('Token has been reset.');
+        }
+
         const { payload } = await jwtVerify(token, this.encodeSecret());
 
         const user = {
@@ -34,6 +40,11 @@ export class JwtTokenService implements TokenService {
         assertAuthUser(user);
 
         return user;
+    }
+
+    async reset(token: string): Promise<void> {
+        await this.validate(token);
+        this.resetTokens.add(token);
     }
 
     private encodeSecret(): Uint8Array {
