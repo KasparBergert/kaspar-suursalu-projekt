@@ -14,13 +14,11 @@ import { useSession } from './features/auth/composables/useSession.ts';
 import { useQuestions } from './features/questions/composables/useQuestions.ts';
 import { useNotice } from './shared/composables/useNotice.ts';
 import { useModal } from './shared/composables/useModal.ts';
-import { createApiClient } from './services/apiClient.ts';
 
 const notice = useNotice();
 const session = useSession();
-const api = createApiClient(() => session.token.value);
-const auth = useAuth(api, session, notice);
-const questions = useQuestions(api, session.isAuthenticated, notice);
+const auth = useAuth(session, notice);
+const questions = useQuestions(session.isAuthenticated, session.token, notice);
 const modal = useModal();
 const isSubmitting = computed(() => auth.isSubmitting.value || questions.isSubmitting.value);
 

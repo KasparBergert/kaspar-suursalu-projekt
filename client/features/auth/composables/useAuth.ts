@@ -1,20 +1,19 @@
 import { ref } from 'vue';
-import type { createApiClient } from '../../../services/apiClient.ts';
+import * as authApi from '../services/authApi.ts';
 import type { AuthCredentials, AuthMode, RegisterPayload } from '../../../types.ts';
 import type { useNotice } from '../../../shared/composables/useNotice.ts';
 import type { useSession } from './useSession.ts';
 
-type ApiClient = ReturnType<typeof createApiClient>;
 type Notice = ReturnType<typeof useNotice>;
 type Session = ReturnType<typeof useSession>;
 
-export function useAuth(api: ApiClient, session: Session, notice: Notice) {
+export function useAuth(session: Session, notice: Notice) {
     const authMode = ref<AuthMode>('login');
     const isSubmitting = ref(false);
 
     async function loadProfile(): Promise<void> {
         try {
-            const result = await api.getProfile();
+            const result = await authApi.getProfile(session.token.value);
             session.updateUser(result.user);
         } catch {
             session.clearSession();
@@ -27,8 +26,8 @@ export function useAuth(api: ApiClient, session: Session, notice: Notice) {
 
         try {
             const result = authMode.value === 'login'
-                ? await api.login(payload)
-                : await api.register(payload as RegisterPayload);
+                ? await authApi.login(payload)
+                : await authApi.register(payload as RegisterPayload);
 
             session.setSession(result.token, result.user);
             notice.showMessage(`Welcome, ${result.user.name}.`);
@@ -51,7 +50,7 @@ export function useAuth(api: ApiClient, session: Session, notice: Notice) {
         notice.clearNotice();
 
         try {
-            await api.logout();
+            await authApi.logout(session.token.value);
             notice.showMessage('Logged out.');
         } catch (error) {
             notice.showError(error);

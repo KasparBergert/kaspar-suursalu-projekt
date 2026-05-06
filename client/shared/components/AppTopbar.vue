@@ -24,50 +24,25 @@ defineEmits<{
         </button>
 
         <nav class="nav-actions">
-            <button
-                class="nav-button"
-                :class="{ active: view === 'feed' }"
-                type="button"
-                @click="$emit('showFeed')"
-            >
+            <button class="nav-button" :class="{ active: view === 'feed' }" type="button" @click="$emit('showFeed')">
                 Home
             </button>
-            <button
-                class="nav-button"
-                :class="{ active: view === 'profile' }"
-                :disabled="!isAuthenticated"
-                type="button"
-                @click="$emit('showProfile')"
-            >
+            <button class="nav-button" :class="{ active: view === 'profile' }" :disabled="!isAuthenticated"
+                type="button" @click="$emit('showProfile')">
                 Profile
             </button>
         </nav>
 
         <div class="account">
-            <button
-                v-if="!user"
-                class="secondary-button"
-                type="button"
-                @click="$emit('openAuth')"
-            >
+            <button v-if="!user" class="secondary-button" type="button" @click="$emit('openAuth')">
                 Log in
             </button>
-            <button
-                v-if="user"
-                class="primary-button topbar-primary"
-                type="button"
-                @click="$emit('openQuestionModal')"
-            >
+            <button v-if="user" class="primary-button topbar-primary" type="button" @click="$emit('openQuestionModal')">
                 Ask
             </button>
             <span v-if="user" class="user-chip">{{ user.name }}</span>
-            <button
-                v-if="user"
-                class="secondary-button"
-                type="button"
-                :disabled="isSubmitting"
-                @click="$emit('logout')"
-            >
+            <button v-if="user" class="secondary-button" type="button" :disabled="isSubmitting"
+                @click="$emit('logout')">
                 Log out
             </button>
         </div>

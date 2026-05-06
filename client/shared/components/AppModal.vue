@@ -1,20 +1,12 @@
 <script setup lang="ts">
-import { watch } from 'vue';
 import { useModal } from '../composables/useModal.ts';
 
-const { closeModal, component, state } = useModal();
-
-watch(
-    () => state.isOpen,
-    (isOpen) => {
-        document.body.classList.toggle('modal-open', isOpen);
-    },
-);
+const { activeComponent, closeModal, state } = useModal();
 </script>
 
 <template>
     <Teleport to="body">
-        <div v-if="state.isOpen && component" class="modal-backdrop" @click="closeModal">
+        <div v-if="state.isOpen && activeComponent" class="modal-backdrop" @click="closeModal">
             <section
                 class="modal-dialog"
                 role="dialog"
@@ -35,7 +27,7 @@ watch(
                 </header>
 
                 <component
-                    :is="component"
+                    :is="activeComponent"
                     v-bind="state.props"
                     @close="closeModal"
                 />

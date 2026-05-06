@@ -1,5 +1,5 @@
 import { computed, ref, watch, type Ref } from 'vue';
-import type { createApiClient } from '../../../services/apiClient.ts';
+import * as questionsApi from '../services/questionsApi.ts';
 import type {
     CreateQuestionPayload,
     QuestionData,
@@ -8,12 +8,11 @@ import type {
 } from '../../../types.ts';
 import type { useNotice } from '../../../shared/composables/useNotice.ts';
 
-type ApiClient = ReturnType<typeof createApiClient>;
 type Notice = ReturnType<typeof useNotice>;
 
 export function useQuestions(
-    api: ApiClient,
     isAuthenticated: Readonly<Ref<boolean>>,
+    token: Readonly<Ref<string>>,
     notice: Notice,
 ) {
     const view = ref<View>('feed');
@@ -38,7 +37,7 @@ export function useQuestions(
         notice.clearNotice();
 
         try {
-            const result = await api.getQuestions(nextPage);
+            const result = await questionsApi.getQuestions(nextPage);
 
             questions.value = result.data;
             page.value = result.page;
@@ -64,7 +63,7 @@ export function useQuestions(
         notice.clearNotice();
 
         try {
-            const result = await api.getMyQuestions();
+            const result = await questionsApi.getMyQuestions(token.value);
             myQuestions.value = result.data;
         } catch (error) {
             notice.showError(error);
@@ -78,7 +77,7 @@ export function useQuestions(
         notice.clearNotice();
 
         try {
-            selectedQuestion.value = await api.getQuestion(questionId);
+            selectedQuestion.value = await questionsApi.getQuestion(questionId);
         } catch (error) {
             notice.showError(error);
         }
@@ -89,7 +88,7 @@ export function useQuestions(
         notice.clearNotice();
 
         try {
-            const question = await api.createQuestion(payload);
+            const question = await questionsApi.createQuestion(payload, token.value);
 
             questions.value = [question, ...questions.value];
             await selectQuestion(question.id);
@@ -112,7 +111,7 @@ export function useQuestions(
         notice.clearNotice();
 
         try {
-            const updatedQuestion = await api.upvoteQuestion(question.id);
+            const updatedQuestion = await questionsApi.upvoteQuestion(question.id, token.value);
 
             replaceQuestion(updatedQuestion);
 
@@ -133,7 +132,7 @@ export function useQuestions(
         notice.clearNotice();
 
         try {
-            await api.addAnswer(selectedQuestionId.value, text);
+            await questionsApi.addAnswer(selectedQuestionId.value, text, token.value);
             await selectQuestion(selectedQuestionId.value);
             notice.showMessage('Answer posted.');
         } catch (error) {
