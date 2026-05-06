@@ -1,6 +1,5 @@
-import { createApp } from "vue";
-import App from "./App.vue";
+import { createQuoraApp } from './app.ts';
 
-const app = createApp(App);
+const app = createQuoraApp();
 
 app.mount("#app");

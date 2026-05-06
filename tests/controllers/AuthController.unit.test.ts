@@ -45,12 +45,14 @@ describe('AuthController', () => {
             },
         } as Request;
         const res = createResponse();
+        const next = vi.fn() as NextFunction;
 
-        await new AuthController(authService as AuthService).register(req, res);
+        await new AuthController(authService as AuthService).register(req, res, next);
 
         expect(authService.register).toHaveBeenCalledWith(req.body);
         expect(res.status).toHaveBeenCalledWith(201);
         expect(res.json).toHaveBeenCalledWith(authResult);
+        expect(next).not.toHaveBeenCalled();
     });
 
     it('sends a bad request response when registration fails', async () => {
@@ -76,11 +78,13 @@ describe('AuthController', () => {
             },
         } as Request;
         const res = createResponse();
+        const next = vi.fn() as NextFunction;
 
-        await new AuthController(authService as AuthService).login(req, res);
+        await new AuthController(authService as AuthService).login(req, res, next);
 
         expect(authService.login).toHaveBeenCalledWith(req.body);
         expect(res.json).toHaveBeenCalledWith(authResult);
+        expect(next).not.toHaveBeenCalled();
     });
 
     it('sends an unauthorized response when login fails', async () => {
@@ -104,11 +108,13 @@ describe('AuthController', () => {
             )),
         } as unknown as Request;
         const res = createResponse();
+        const next = vi.fn() as NextFunction;
 
-        await new AuthController(authService as AuthService).logout(req, res);
+        await new AuthController(authService as AuthService).logout(req, res, next);
 
         expect(authService.logout).toHaveBeenCalledWith('jwt-token');
         expect(res.json).toHaveBeenCalledWith({ message: 'Logged out.' });
+        expect(next).not.toHaveBeenCalled();
     });
 
     it('does not log out without an auth token', async () => {
@@ -116,11 +122,13 @@ describe('AuthController', () => {
             header: vi.fn(),
         } as unknown as Request;
         const res = createResponse();
+        const next = vi.fn() as NextFunction;
 
-        await new AuthController(authService as AuthService).logout(req, res);
+        await new AuthController(authService as AuthService).logout(req, res, next);
 
         expect(authService.logout).not.toHaveBeenCalled();
         expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({ error: 'Authentication token is required.' });
+        expect(next).not.toHaveBeenCalled();
     });
 });
