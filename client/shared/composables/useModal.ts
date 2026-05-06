@@ -5,7 +5,7 @@ type ModalOptions = {
     title?: string;
 };
 
-const component = shallowRef<Component | null>(null);
+const activeComponent = shallowRef<Component | null>(null);
 const state = reactive({
     isOpen: false,
     props: {} as Record<string, unknown>,
@@ -14,7 +14,7 @@ const state = reactive({
 
 export function useModal() {
     function openModal(nextComponent: Component, options: ModalOptions = {}): void {
-        component.value = markRaw(nextComponent);
+        activeComponent.value = markRaw(nextComponent);
         state.props = options.props ?? {};
         state.title = options.title ?? '';
         state.isOpen = true;
@@ -24,12 +24,12 @@ export function useModal() {
         state.isOpen = false;
         state.props = {};
         state.title = '';
-        component.value = null;
+        activeComponent.value = null;
     }
 
     return {
+        activeComponent,
         closeModal,
-        component,
         openModal,
         state,
     };

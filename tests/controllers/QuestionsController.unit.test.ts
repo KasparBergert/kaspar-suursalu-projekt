@@ -97,7 +97,7 @@ describe('QuestionsController', () => {
         const result = {
             data: [question],
             page: 2,
-            limit: 5,
+            limit: 10,
             total: 1,
             totalPages: 1,
         };
@@ -105,14 +105,14 @@ describe('QuestionsController', () => {
         const req = {
             query: {
                 page: '2',
-                limit: '5',
+                limit: '1000',
             },
         } as unknown as Request;
         const res = createResponse();
 
         await new QuestionsController(questionsService as QuestionsService).getQuestions(req, res);
 
-        expect(questionsService.getQuestions).toHaveBeenCalledWith({ page: 2, limit: 5 });
+        expect(questionsService.getQuestions).toHaveBeenCalledWith({ page: 2 });
         expect(res.json).toHaveBeenCalledWith(result);
     });
 

@@ -9,6 +9,8 @@ import type {
     QuestionWithCommentsData,
 } from '../interfaces/QuestionInterfaces.ts';
 
+const questionsPageLimit = 10;
+
 export class QuestionsService {
     async createQuestion(data: CreateQuestionData): Promise<QuestionData> {
         const question = await prisma.questions.create({
@@ -67,9 +69,9 @@ export class QuestionsService {
         };
     }
 
-    async getQuestions(pagination: PaginationData): Promise<PaginatedData<QuestionData>> {
+    async getQuestions(pagination: Pick<PaginationData, 'page'>): Promise<PaginatedData<QuestionData>> {
         const page = normalizePage(pagination.page);
-        const limit = normalizeLimit(pagination.limit);
+        const limit = questionsPageLimit;
         const skip = (page - 1) * limit;
 
         const [questions, total] = await Promise.all([

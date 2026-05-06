@@ -94,12 +94,16 @@ describe('QuestionsService', () => {
 
         const result = await new QuestionsService().getQuestions({
             page: 1,
-            limit: 10,
         });
 
+        expect(prisma.questions.findMany).toHaveBeenCalledWith(expect.objectContaining({
+            skip: 0,
+            take: 10,
+        }));
         expect(result).toMatchObject({
             data: [{ id: 'question-1', commentCount: 2 }],
             page: 1,
+            limit: 10,
             total: 1,
         });
     });

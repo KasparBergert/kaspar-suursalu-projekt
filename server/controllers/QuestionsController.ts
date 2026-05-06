@@ -31,7 +31,6 @@ export class QuestionsController {
     getQuestions = async (req: Request, res: Response): Promise<void> => {
         const questions = await this.questionsService.getQuestions({
             page: parseQueryNumber(req.query.page),
-            limit: parseQueryNumber(req.query.limit),
         });
 
         res.json(questions);
