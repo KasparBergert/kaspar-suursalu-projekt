@@ -1,23 +1,12 @@
-import express from 'express';
-import cors from 'cors';
-import './prisma/main.ts';
-import { errorMiddleware } from './middleware/errorMiddleware.ts';
-import routes from './routes.ts';
-
-
-const app = express();
-app.use(cors(
-  {
-    origin: 'http://localhost:5173'
-  }
-));
-app.use(express.json());
-
-app.use('/api', routes);
-app.use(errorMiddleware);
+import { createApp } from './app.ts';
 
 const port = Number(process.env.PORT ?? 3000);
+const app = createApp();
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
+});
+
+process.on('SIGTERM', () => {
+  server.close();
 });
