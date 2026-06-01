@@ -1,18 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { CommentData, QuestionData, QuestionWithCommentsData } from '../../../types.ts';
+import type { CommentSectionModel } from '../../../types.ts';
 import { formatDate } from '../../../utils/formatDate.ts';
 
 defineProps<{
-    comments: CommentData[];
-    isAuthenticated: boolean;
-    isSubmitting: boolean;
-    selectedQuestion: QuestionWithCommentsData | null;
+    model: CommentSectionModel;
 }>();
 
 const emit = defineEmits<{
     answer: [text: string];
-    upvote: [question: QuestionData];
 }>();
 
 const answerText = ref('');
@@ -24,47 +20,33 @@ function submitAnswer(): void {
 </script>
 
 <template>
-    <section v-if="selectedQuestion" class="panel detail-panel">
-        <p class="eyebrow">Question</p>
-        <h2>{{ selectedQuestion.question.title }}</h2>
-        <p class="detail-description">{{ selectedQuestion.question.description }}</p>
-        <div class="meta-row">
-            <span>{{ selectedQuestion.question.user.name }}</span>
-            <span>{{ selectedQuestion.question.upvotes }} upvotes</span>
-            <span>{{ selectedQuestion.question.commentCount }} answers</span>
-        </div>
-        <button
-            class="secondary-button"
-            type="button"
-            @click="$emit('upvote', selectedQuestion.question)"
-        >
-            Upvote
-        </button>
-
-        <form v-if="isAuthenticated" class="answer-form" @submit.prevent="submitAnswer">
-            <label>
-                Answer
-                <textarea v-model="answerText" rows="4" required />
-            </label>
-            <button class="primary-button" type="submit" :disabled="isSubmitting">
-                Answer
+    <section class="comments-panel">
+        <form v-if="model.isAuthenticated" class="answer-form" @submit.prevent="submitAnswer">
+            <div class="comment-avatar" aria-hidden="true">K</div>
+            <input v-model="answerText" type="text" placeholder="Add a comment..." required>
+            <button class="primary-button" type="submit" :disabled="model.isSubmitting">
+                Comment
             </button>
         </form>
 
         <div class="answers">
-            <h3>Answers</h3>
-            <article v-for="comment in comments" :key="comment.id" class="answer">
+            <div class="comments-header">
+                <h3>Comments</h3>
+                <span>Recommended</span>
+            </div>
+            <article v-for="comment in model.comments" :key="comment.id" class="answer">
+                <div class="comment-avatar comment-avatar-small" aria-hidden="true">
+                    {{ comment.user.name.charAt(0).toUpperCase() }}
+                </div>
+                <div class="answer-body">
                 <div class="answer-meta">
                     <strong>{{ comment.user.name }}</strong>
                     <span>{{ formatDate(comment.createdAt) }}</span>
                 </div>
                 <p>{{ comment.text }}</p>
+                </div>
             </article>
-            <p v-if="!comments.length" class="muted">No answers yet.</p>
+            <p v-if="!model.comments.length" class="muted">No answers yet.</p>
         </div>
-    </section>
-
-    <section v-else class="panel detail-panel">
-        <h2>Select a question</h2>
     </section>
 </template>

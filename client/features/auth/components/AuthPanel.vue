@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LogIn } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import type { AuthCredentials, AuthMode, RegisterPayload } from '../../../types.ts';
 
@@ -47,14 +48,14 @@ function submit(): void {
         <div class="segment-control" aria-label="Authentication mode">
             <button
                 type="button"
-                :class="{ active: authMode === 'login' }"
+                :class="{ 'is-active': authMode === 'login' }"
                 @click="$emit('switchMode', 'login')"
             >
                 Log in
             </button>
             <button
                 type="button"
-                :class="{ active: authMode === 'register' }"
+                :class="{ 'is-active': authMode === 'register' }"
                 @click="$emit('switchMode', 'register')"
             >
                 Sign up
@@ -81,6 +82,7 @@ function submit(): void {
                 >
             </label>
             <button class="primary-button" type="submit" :disabled="isSubmitting">
+                <LogIn v-if="authMode === 'login'" class="action-icon" :stroke-width="2.4" />
                 {{ authSubmitLabel }}
             </button>
         </form>

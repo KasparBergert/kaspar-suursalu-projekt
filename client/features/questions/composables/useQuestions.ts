@@ -1,12 +1,14 @@
-import { computed, ref, watch, type Ref } from 'vue';
-import * as questionsApi from '../services/questionsApi.ts';
+import { ref, type Ref } from 'vue';
 import type {
     CreateQuestionPayload,
     QuestionData,
-    QuestionWithCommentsData,
     View,
 } from '../../../types.ts';
 import type { useNotice } from '../../../shared/composables/useNotice.ts';
+import { postAnswer, postQuestion, upvoteQuestion } from './questionCommands.ts';
+import { runQuestionTask } from './runQuestionTask.ts';
+import { useQuestionCollections } from './useQuestionCollections.ts';
+import { useSelectedQuestion } from './useSelectedQuestion.ts';
 
 type Notice = ReturnType<typeof useNotice>;
 
@@ -16,90 +18,57 @@ export function useQuestions(
     notice: Notice,
 ) {
     const view = ref<View>('feed');
-    const questions = ref<QuestionData[]>([]);
-    const myQuestions = ref<QuestionData[]>([]);
-    const selectedQuestionId = ref<string | null>(null);
-    const selectedQuestion = ref<QuestionWithCommentsData | null>(null);
-    const page = ref(1);
-    const totalPages = ref(1);
     const isLoading = ref(false);
     const isSubmitting = ref(false);
-    const selectedComments = computed(() => selectedQuestion.value?.comments.data ?? []);
+    const collections = useQuestionCollections(isAuthenticated, token);
+    const selectedQuestion = useSelectedQuestion();
 
-    watch(isAuthenticated, (nextIsAuthenticated) => {
-        if (!nextIsAuthenticated) {
-            myQuestions.value = [];
-        }
-    });
-
-    async function loadFeed(nextPage = page.value): Promise<void> {
-        isLoading.value = true;
-        notice.clearNotice();
-
-        try {
-            const result = await questionsApi.getQuestions(nextPage);
-
-            questions.value = result.data;
-            page.value = result.page;
-            totalPages.value = result.totalPages || 1;
-
-            if (!selectedQuestionId.value && result.data[0]) {
-                await selectQuestion(result.data[0].id);
-            }
-        } catch (error) {
-            notice.showError(error);
-        } finally {
-            isLoading.value = false;
-        }
+    function loadFeed(nextPage?: number): Promise<void | undefined> {
+        return runQuestionTask(
+            isLoading,
+            notice,
+            () => collections.loadFeed(nextPage),
+        );
     }
 
-    async function loadMyQuestions(): Promise<void> {
-        if (!isAuthenticated.value) {
-            myQuestions.value = [];
-            return;
+    function loadMoreFeed(): Promise<void | undefined> {
+        if (view.value !== 'feed' || isLoading.value || collections.page.value >= collections.totalPages.value) {
+            return Promise.resolve(undefined);
         }
 
-        isLoading.value = true;
-        notice.clearNotice();
-
-        try {
-            const result = await questionsApi.getMyQuestions(token.value);
-            myQuestions.value = result.data;
-        } catch (error) {
-            notice.showError(error);
-        } finally {
-            isLoading.value = false;
-        }
+        return runQuestionTask(
+            isLoading,
+            notice,
+            collections.loadMoreFeed,
+        );
     }
 
-    async function selectQuestion(questionId: string): Promise<void> {
-        selectedQuestionId.value = questionId;
-        notice.clearNotice();
+    function selectQuestion(questionId: string): Promise<void | undefined> {
+        return runQuestionTask(
+            isLoading,
+            notice,
+            () => selectedQuestion.selectQuestion(questionId),
+        );
+    }
 
-        try {
-            selectedQuestion.value = await questionsApi.getQuestion(questionId);
-        } catch (error) {
-            notice.showError(error);
-        }
+    function loadMyQuestions(): Promise<void | undefined> {
+        return runQuestionTask(
+            isLoading,
+            notice,
+            collections.loadMyQuestions,
+        );
     }
 
     async function createQuestion(payload: CreateQuestionPayload): Promise<boolean> {
-        isSubmitting.value = true;
-        notice.clearNotice();
+        const question = await runQuestionTask(isSubmitting, notice, () => (
+            postQuestion(payload, token.value, collections, selectedQuestion)
+        ));
 
-        try {
-            const question = await questionsApi.createQuestion(payload, token.value);
-
-            questions.value = [question, ...questions.value];
-            await selectQuestion(question.id);
+        if (question) {
             notice.showMessage('Question posted.');
-            return true;
-        } catch (error) {
-            notice.showError(error);
-            return false;
-        } finally {
-            isSubmitting.value = false;
         }
+
+        return Boolean(question);
     }
 
     async function upvote(question: QuestionData): Promise<void> {
@@ -111,35 +80,23 @@ export function useQuestions(
         notice.clearNotice();
 
         try {
-            const updatedQuestion = await questionsApi.upvoteQuestion(question.id, token.value);
-
-            replaceQuestion(updatedQuestion);
-
-            if (selectedQuestion.value?.question.id === updatedQuestion.id) {
-                selectedQuestion.value.question = updatedQuestion;
-            }
+            await upvoteQuestion(question.id, token.value, collections, selectedQuestion);
         } catch (error) {
             notice.showError(error);
         }
     }
 
     async function addAnswer(text: string): Promise<void> {
-        if (!selectedQuestionId.value) {
+        const questionId = selectedQuestion.selectedQuestionId.value;
+
+        if (!questionId) {
             return;
         }
 
-        isSubmitting.value = true;
-        notice.clearNotice();
-
-        try {
-            await questionsApi.addAnswer(selectedQuestionId.value, text, token.value);
-            await selectQuestion(selectedQuestionId.value);
+        await runQuestionTask(isSubmitting, notice, async () => {
+            await postAnswer(questionId, text, token.value, selectedQuestion);
             notice.showMessage('Answer posted.');
-        } catch (error) {
-            notice.showError(error);
-        } finally {
-            isSubmitting.value = false;
-        }
+        });
     }
 
     async function showProfile(): Promise<void> {
@@ -156,32 +113,24 @@ export function useQuestions(
         await selectQuestion(questionId);
     }
 
-    function replaceQuestion(updatedQuestion: QuestionData): void {
-        questions.value = questions.value.map((question) => (
-            question.id === updatedQuestion.id ? updatedQuestion : question
-        ));
-        myQuestions.value = myQuestions.value.map((question) => (
-            question.id === updatedQuestion.id ? updatedQuestion : question
-        ));
-    }
-
     return {
         addAnswer,
         createQuestion,
         isLoading,
         isSubmitting,
         loadFeed,
-        myQuestions,
+        loadMoreFeed,
+        myQuestions: collections.myQuestions,
         openProfileQuestion,
-        page,
-        questions,
-        selectedComments,
-        selectedQuestion,
-        selectedQuestionId,
+        page: collections.page,
+        questions: collections.questions,
+        selectedComments: selectedQuestion.selectedComments,
+        selectedQuestion: selectedQuestion.selectedQuestion,
+        selectedQuestionId: selectedQuestion.selectedQuestionId,
         selectQuestion,
         showFeed,
         showProfile,
-        totalPages,
+        totalPages: collections.totalPages,
         upvote,
         view,
     };

@@ -1,0 +1,119 @@
+.shell {
+    min-height: 100vh;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: auto auto minmax(220px, 420px) auto;
+    justify-content: center;
+    gap: 14px;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--topbar-bg);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.brand {
+    display: grid;
+    min-width: 128px;
+    height: 52px;
+    place-items: center start;
+    border: 0;
+    background: transparent;
+    color: var(--accent-color);
+    cursor: pointer;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.topbar-search {
+    display: flex;
+    align-items: center;
+    min-width: 260px;
+    height: 36px;
+    gap: 8px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong-color);
+    border-radius: 3px;
+    background: #151515;
+    color: var(--muted-text-color);
+    font-size: 15px;
+}
+
+.search-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--muted-text-color);
+}
+
+.account {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.user-chip {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #1687c9;
+    color: #ffffff;
+    font-size: 0;
+}
+
+.user-chip::first-letter {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 640px);
+    gap: 18px;
+    width: min(980px, 100%);
+    margin: 0 auto;
+}
+
+.sidebar {
+    position: sticky;
+    top: 64px;
+    align-self: start;
+    min-height: calc(100vh - 52px);
+    padding: 14px 0 32px;
+    color: var(--muted-text-color);
+}
+
+.content {
+    min-width: 0;
+    padding: 14px 0 36px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 40px;
+    margin-bottom: 10px;
+}
+
+.section-title h1 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.2;
+}

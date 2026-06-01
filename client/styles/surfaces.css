@@ -1,0 +1,75 @@
+.panel,
+.question-card,
+.feed-composer,
+.notice,
+.empty-state {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--panel-bg);
+}
+
+.panel {
+    padding: 16px;
+}
+
+.panel + .panel {
+    margin-top: 12px;
+}
+
+.panel h2 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.25;
+}
+
+.compact h2 {
+    margin-bottom: 8px;
+}
+
+.rail-panel {
+    padding-bottom: 12px;
+}
+
+.rail-panel {
+    margin-bottom: 8px;
+}
+
+.rail-panel h2 {
+    margin: 0 0 8px;
+    color: var(--soft-text-color);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.sidebar-footer {
+    margin: 22px 0 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-color);
+    color: var(--soft-text-color);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.notice {
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    font-weight: 700;
+}
+
+.notice-success {
+    border-color: var(--success-border-color);
+    background: var(--success-bg);
+    color: var(--success-text-color);
+}
+
+.notice-error {
+    border-color: var(--error-border-color);
+    background: var(--error-bg);
+    color: var(--error-text-color);
+}
+
+.empty-state {
+    padding: 30px;
+    color: var(--soft-text-color);
+    text-align: center;
+}

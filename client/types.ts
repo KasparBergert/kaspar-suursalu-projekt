@@ -52,6 +52,14 @@ export type AuthCredentials = {
     password: string;
 };
 
+export type PasswordResetRequestPayload = {
+    email: string;
+};
+
+export type PasswordResetPayload = {
+    password: string;
+};
+
 export type RegisterPayload = AuthCredentials & {
     name: string;
 };
@@ -59,4 +67,44 @@ export type RegisterPayload = AuthCredentials & {
 export type CreateQuestionPayload = {
     title: string;
     description: string;
+};
+
+export type TopbarModel = {
+    isAuthenticated: boolean;
+    isSubmitting: boolean;
+    user: AuthUser | null;
+    view: View;
+};
+
+export type TopbarActions = {
+    logout: () => void | Promise<void>;
+    openAuth: () => void;
+    openQuestionModal: () => void;
+    showFeed: () => void;
+    showProfile: () => void | Promise<void>;
+};
+
+export type QuestionListModel = {
+    comments: CommentData[];
+    emptyText: string;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    isSubmitting: boolean;
+    questions: QuestionData[];
+    selectedQuestionId: string | null;
+    showAuthor: boolean;
+    title: string;
+    user: AuthUser | null;
+};
+
+export type QuestionListActions = {
+    answer: (text: string) => void | Promise<void>;
+    open: (questionId: string) => void | Promise<void>;
+    upvote: (question: QuestionData) => void | Promise<void>;
+};
+
+export type CommentSectionModel = {
+    comments: CommentData[];
+    isAuthenticated: boolean;
+    isSubmitting: boolean;
 };

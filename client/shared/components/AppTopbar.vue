@@ -1,49 +1,91 @@
 <script setup lang="ts">
-import type { AuthUser, View } from '../../types.ts';
+import {
+    Bell,
+    ChevronDown,
+    Globe2,
+    Home,
+    List,
+    LogIn,
+    LogOut,
+    Search,
+    SquarePen,
+    UsersRound,
+} from 'lucide-vue-next';
+import type { TopbarActions, TopbarModel } from '../../types.ts';
 
 defineProps<{
-    isSubmitting: boolean;
-    isAuthenticated: boolean;
-    user: AuthUser | null;
-    view: View;
-}>();
-
-defineEmits<{
-    logout: [];
-    openAuth: [];
-    openQuestionModal: [];
-    showFeed: [];
-    showProfile: [];
+    actions: TopbarActions;
+    model: TopbarModel;
 }>();
 </script>
 
 <template>
     <header class="topbar">
-        <button class="brand" type="button" @click="$emit('showFeed')">
-            Q
+        <button class="brand" type="button" @click="actions.showFeed">
+            Quora
         </button>
 
         <nav class="nav-actions">
-            <button class="nav-button" :class="{ active: view === 'feed' }" type="button" @click="$emit('showFeed')">
-                Home
+            <button
+                class="nav-button"
+                :class="{ 'is-active': model.view === 'feed' }"
+                type="button"
+                aria-label="Home"
+                @click="actions.showFeed"
+            >
+                <Home class="topbar-icon" :stroke-width="2.2" />
             </button>
-            <button class="nav-button" :class="{ active: view === 'profile' }" :disabled="!isAuthenticated"
-                type="button" @click="$emit('showProfile')">
-                Profile
+            <span class="nav-button nav-button-static" aria-hidden="true">
+                <List class="topbar-icon" :stroke-width="2.2" />
+            </span>
+            <span class="nav-button nav-button-static" aria-hidden="true">
+                <SquarePen class="topbar-icon" :stroke-width="2.2" />
+            </span>
+            <button
+                class="nav-button"
+                :class="{ 'is-active': model.view === 'profile' }"
+                :disabled="!model.isAuthenticated"
+                type="button"
+                aria-label="Profile"
+                @click="actions.showProfile"
+            >
+                <UsersRound class="topbar-icon" :stroke-width="2.2" />
             </button>
+            <span class="nav-button nav-button-static" aria-hidden="true">
+                <Bell class="topbar-icon" :stroke-width="2.2" />
+            </span>
         </nav>
 
+        <div class="topbar-search" aria-hidden="true">
+            <Search class="search-icon" :stroke-width="2.2" />
+            <span>Search Quora</span>
+        </div>
+
         <div class="account">
-            <button v-if="!user" class="secondary-button" type="button" @click="$emit('openAuth')">
+            <button v-if="!model.user" class="secondary-button" type="button" @click="actions.openAuth">
+                <LogIn class="action-icon" :stroke-width="2.4" />
                 Log in
             </button>
-            <button v-if="user" class="primary-button topbar-primary" type="button" @click="$emit('openQuestionModal')">
-                Ask
+            <span v-if="model.user" class="quora-plus-button" aria-hidden="true">
+                Try Quora+
+            </span>
+            <span v-if="model.user" class="user-chip">{{ model.user.name }}</span>
+            <span v-if="model.user" class="icon-button icon-button-static" aria-hidden="true">
+                <Globe2 class="topbar-icon" :stroke-width="2.2" />
+            </span>
+            <button v-if="model.user" class="primary-button topbar-primary" type="button" @click="actions.openQuestionModal">
+                Add question
+                <ChevronDown class="action-icon" :stroke-width="2.5" />
             </button>
-            <span v-if="user" class="user-chip">{{ user.name }}</span>
-            <button v-if="user" class="secondary-button" type="button" :disabled="isSubmitting"
-                @click="$emit('logout')">
-                Log out
+            <button
+                v-if="model.user"
+                class="icon-button"
+                type="button"
+                :disabled="model.isSubmitting"
+                aria-label="Log out"
+                @click="actions.logout"
+            >
+                <LogOut class="topbar-icon" :stroke-width="2.2" />
             </button>
         </div>
     </header>
