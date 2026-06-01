@@ -1,4 +1,4 @@
-import { ref, watch, type Ref } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
 import * as questionsApi from '../services/questionsApi.ts';
 import type { QuestionData } from '../../../types.ts';
 
@@ -10,6 +10,7 @@ export function useQuestionCollections(
     const myQuestions = ref<QuestionData[]>([]);
     const page = ref(1);
     const totalPages = ref(1);
+    const hasMoreFeed = computed(() => page.value < totalPages.value);
 
     watch(isAuthenticated, (nextIsAuthenticated) => {
         if (!nextIsAuthenticated) {
@@ -26,7 +27,7 @@ export function useQuestionCollections(
     }
 
     async function loadMoreFeed(): Promise<void> {
-        if (page.value >= totalPages.value) {
+        if (!hasMoreFeed.value) {
             return;
         }
 
@@ -57,6 +58,7 @@ export function useQuestionCollections(
     }
 
     return {
+        hasMoreFeed,
         loadFeed,
         loadMoreFeed,
         loadMyQuestions,

@@ -1,6 +1,14 @@
 export type View = 'feed' | 'profile';
+export type AppRoute = View | 'auth';
 
 export type AuthMode = 'login' | 'register';
+export type AuthPageMode = AuthMode | 'forgot-password' | 'reset-password';
+
+export type AuthFormModel = {
+    errorMessage: string;
+    isSubmitting: boolean;
+    message: string;
+};
 
 export type AuthUser = {
     id: string;
@@ -84,6 +92,19 @@ export type TopbarActions = {
     showProfile: () => void | Promise<void>;
 };
 
+export type AuthPageModel = AuthFormModel & {
+    mode: AuthPageMode;
+};
+
+export type AuthPageActions = {
+    forgotPassword: () => void;
+    requestPasswordReset: (email: string) => void | Promise<void>;
+    resetPassword: (password: string) => void | Promise<void>;
+    showLogin: () => void;
+    showRegister: () => void;
+    submit: (payload: AuthCredentials | RegisterPayload) => void | Promise<void>;
+};
+
 export type QuestionListModel = {
     comments: CommentData[];
     emptyText: string;
@@ -101,6 +122,27 @@ export type QuestionListActions = {
     answer: (text: string) => void | Promise<void>;
     open: (questionId: string) => void | Promise<void>;
     upvote: (question: QuestionData) => void | Promise<void>;
+};
+
+export type FeedPageModel = {
+    canLoadMore: boolean;
+    questions: QuestionListModel;
+};
+
+export type FeedPageActions = {
+    askQuestion: () => void;
+    loadMore: () => void | Promise<void>;
+    questions: QuestionListActions;
+};
+
+export type QuestionCardModel = {
+    detail: QuestionListModel;
+    isSelected: boolean;
+    question: QuestionData;
+};
+
+export type QuestionCardActions = QuestionListActions & {
+    hide: (questionId: string) => void;
 };
 
 export type CommentSectionModel = {

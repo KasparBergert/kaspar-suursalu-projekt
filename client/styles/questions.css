@@ -63,7 +63,7 @@
 
 .question-card {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .question-card:hover {
@@ -155,8 +155,71 @@
 
 .dismiss-x {
     position: absolute;
-    top: 14px;
+    top: 12px;
     right: 16px;
+    z-index: 1;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 160ms ease, box-shadow 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.dismiss-x::before {
+    position: absolute;
+    top: -52px;
+    left: 50%;
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+    transition: opacity 160ms ease, transform 160ms ease;
+    border-radius: 3px;
+    background: #3a3a3d;
+    box-shadow:
+        0 12px 24px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+    content: attr(data-tooltip);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 15px 11px;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.dismiss-x::after {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    opacity: 0;
+    transform: translateX(-50%) rotate(45deg);
+    transition: opacity 160ms ease;
+    background: #3a3a3d;
+    content: '';
+    pointer-events: none;
+}
+
+.dismiss-x:hover,
+.dismiss-x:focus-visible {
+    background: #3a3a3a;
+    box-shadow:
+        0 0 0 8px #3a3a3a,
+        0 0 0 9px rgba(255, 255, 255, 0.2),
+        0 10px 20px rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.dismiss-x:hover::before,
+.dismiss-x:focus-visible::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.dismiss-x:hover::after,
+.dismiss-x:focus-visible::after {
+    opacity: 1;
 }
 
 .card-menu {

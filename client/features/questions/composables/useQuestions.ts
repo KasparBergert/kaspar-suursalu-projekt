@@ -2,7 +2,6 @@ import { ref, type Ref } from 'vue';
 import type {
     CreateQuestionPayload,
     QuestionData,
-    View,
 } from '../../../types.ts';
 import type { useNotice } from '../../../shared/composables/useNotice.ts';
 import { postAnswer, postQuestion, upvoteQuestion } from './questionCommands.ts';
@@ -17,7 +16,6 @@ export function useQuestions(
     token: Readonly<Ref<string>>,
     notice: Notice,
 ) {
-    const view = ref<View>('feed');
     const isLoading = ref(false);
     const isSubmitting = ref(false);
     const collections = useQuestionCollections(isAuthenticated, token);
@@ -32,7 +30,7 @@ export function useQuestions(
     }
 
     function loadMoreFeed(): Promise<void | undefined> {
-        if (view.value !== 'feed' || isLoading.value || collections.page.value >= collections.totalPages.value) {
+        if (isLoading.value || !collections.hasMoreFeed.value) {
             return Promise.resolve(undefined);
         }
 
@@ -99,23 +97,14 @@ export function useQuestions(
         });
     }
 
-    async function showProfile(): Promise<void> {
-        view.value = 'profile';
-        await loadMyQuestions();
-    }
-
-    function showFeed(): void {
-        view.value = 'feed';
-    }
-
     async function openProfileQuestion(questionId: string): Promise<void> {
-        showFeed();
         await selectQuestion(questionId);
     }
 
     return {
         addAnswer,
         createQuestion,
+        hasMoreFeed: collections.hasMoreFeed,
         isLoading,
         isSubmitting,
         loadFeed,
@@ -128,10 +117,7 @@ export function useQuestions(
         selectedQuestion: selectedQuestion.selectedQuestion,
         selectedQuestionId: selectedQuestion.selectedQuestionId,
         selectQuestion,
-        showFeed,
-        showProfile,
         totalPages: collections.totalPages,
         upvote,
-        view,
     };
 }

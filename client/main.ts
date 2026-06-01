@@ -1,5 +1,8 @@
-import { createQuoraApp } from './app.ts';
+import { createApp } from 'vue';
+import App from './App.vue';
+import { router } from './router.ts';
+import './styles.css';
 
-const app = createQuoraApp();
-
-app.mount("#app");
+createApp(App)
+    .use(router)
+    .mount('#app');

@@ -1,12 +1,26 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, MessageCircle, MoreHorizontal, Repeat2, X } from 'lucide-vue-next';
-import QuestionDetail from './QuestionDetail.vue';
-import type { QuestionListActions, QuestionListModel } from '../../../types.ts';
+import { computed, ref } from 'vue';
+import QuestionCard from './QuestionCard.vue';
+import type { QuestionCardActions, QuestionListActions, QuestionListModel } from '../../../types.ts';
 
-defineProps<{
+const props = defineProps<{
     actions: QuestionListActions;
     model: QuestionListModel;
 }>();
+
+const hiddenQuestionIds = ref<Set<string>>(new Set());
+const visibleQuestions = computed(() => (
+    props.model.questions.filter((question) => !hiddenQuestionIds.value.has(question.id))
+));
+
+function hideQuestion(questionId: string): void {
+    hiddenQuestionIds.value = new Set([...hiddenQuestionIds.value, questionId]);
+}
+
+const cardActions = computed<QuestionCardActions>(() => ({
+    ...props.actions,
+    hide: hideQuestion,
+}));
 </script>
 
 <template>
@@ -16,62 +30,18 @@ defineProps<{
     </div>
 
     <div class="question-grid">
-        <article
-            v-for="question in model.questions"
+        <QuestionCard
+            v-for="question in visibleQuestions"
             :key="question.id"
-            class="question-card"
-            :class="{ 'is-selected': model.selectedQuestionId === question.id }"
-        >
-            <span class="dismiss-x" aria-hidden="true">
-                <X class="action-icon" :stroke-width="2.2" />
-            </span>
-            <div class="question-open">
-                <div class="question-byline">
-                    <div class="comment-avatar comment-avatar-small" aria-hidden="true">
-                        {{ question.user.name.charAt(0).toUpperCase() }}
-                    </div>
-                    <div>
-                        <span v-if="model.showAuthor" class="question-author">
-                            {{ question.user.name }} · Follow
-                        </span>
-                        <span v-else class="question-author">
-                            You · Follow
-                        </span>
-                        <span class="question-subline">Shared just now</span>
-                    </div>
-                </div>
-                <span class="question-title">{{ question.title }}</span>
-                <span class="question-description">{{ question.description }}</span>
-            </div>
-            <div class="card-actions">
-                <button class="vote-button" type="button" @click="actions.upvote(question)">
-                    <ArrowUp class="action-icon" :stroke-width="2.5" />
-                    Upvote
-                    <strong>{{ question.upvotes }}</strong>
-                </button>
-                <span class="downvote-icon" aria-hidden="true">
-                    <ArrowDown class="action-icon" :stroke-width="2.5" />
-                </span>
-                <button class="comment-button" type="button" aria-label="Comments" @click="actions.open(question.id)">
-                    <MessageCircle class="action-icon" :stroke-width="2.3" />
-                    <strong>{{ question.commentCount }}</strong>
-                </button>
-                <span class="reshare-icon" aria-hidden="true">
-                    <Repeat2 class="action-icon" :stroke-width="2.3" />
-                </span>
-                <span class="card-menu" aria-hidden="true">
-                    <MoreHorizontal class="action-icon" :stroke-width="2.6" />
-                </span>
-            </div>
+            :actions="cardActions"
+            :model="{
+                detail: model,
+                isSelected: model.selectedQuestionId === question.id,
+                question,
+            }"
+        />
 
-            <QuestionDetail
-                v-if="model.selectedQuestionId === question.id"
-                :model="model"
-                @answer="actions.answer"
-            />
-        </article>
-
-        <div v-if="!model.questions.length && !model.isLoading" class="empty-state">
+        <div v-if="!visibleQuestions.length && !model.isLoading" class="empty-state">
             {{ model.emptyText }}
         </div>
     </div>
