@@ -9,6 +9,14 @@ export interface LoginData {
     password: string;
 }
 
+export interface PasswordResetRequestData {
+    email: string;
+}
+
+export interface PasswordResetData {
+    password: string;
+}
+
 export interface AuthUser {
     id: string;
     name: string;
@@ -29,4 +37,8 @@ export interface TokenService {
     create(user: AuthUser): Promise<string>;
     validate(token: string): Promise<AuthUser>;
     reset(token: string): Promise<void>;
+}
+
+export interface EmailService {
+    sendPasswordReset(email: string, resetUrl: string): Promise<void>;
 }

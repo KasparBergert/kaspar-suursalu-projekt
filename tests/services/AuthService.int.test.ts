@@ -3,6 +3,7 @@ import prisma from '../../server/prisma/main.ts';
 import { AuthService } from '../../server/services/AuthService.ts';
 import type {
     AuthUser,
+    EmailService,
     PasswordHasher,
     TokenService,
 } from '../../server/interfaces/UserInterfaces.ts';
@@ -46,10 +47,19 @@ class IntegrationTokenService implements TokenService {
     }
 }
 
-function createAuthService(): AuthService {
+class IntegrationEmailService implements EmailService {
+    resetLinks: string[] = [];
+
+    async sendPasswordReset(_email: string, resetUrl: string): Promise<void> {
+        this.resetLinks.push(resetUrl);
+    }
+}
+
+function createAuthService(emailService?: EmailService): AuthService {
     return new AuthService(
         new IntegrationPasswordHasher(),
         new IntegrationTokenService(),
+        emailService,
     );
 }
 
@@ -62,7 +72,8 @@ function createEmail(): string {
 
 describe('AuthService integration', () => {
     afterEach(async () => {
-        await prisma.questionUpvotes.deleteMany({});
+    await prisma.questionUpvotes.deleteMany({});
+    await prisma.pendingPasswordReset.deleteMany({});
         await prisma.comments.deleteMany({});
         await prisma.questions.deleteMany({});
         await prisma.users.deleteMany({});
@@ -112,5 +123,43 @@ describe('AuthService integration', () => {
         });
 
         expect(result.user.email).toBe(email);
+    });
+
+    it('resets a password through a one-time emailed link', async () => {
+        const email = createEmail();
+        const emailService = new IntegrationEmailService();
+        const authService = createAuthService(emailService);
+        await authService.register({
+            name: 'Integration User',
+            email,
+            password: 'password123',
+        });
+
+        const resetRequest = await authService.requestPasswordReset({ email });
+        const resetUrl = new URL(emailService.resetLinks[0]);
+        const token = resetUrl.searchParams.get('resetToken');
+
+        expect(resetRequest).toEqual({
+            message: 'If that email exists, a password reset link has been sent.',
+        });
+        expect(token).toEqual(expect.any(String));
+        await expect(authService.verifyPasswordResetToken(token ?? '')).resolves.toEqual({ email });
+
+        await authService.resetPassword(token ?? '', {
+            password: 'new-password123',
+        });
+
+        await expect(authService.login({
+            email,
+            password: 'password123',
+        })).rejects.toThrow('Email or password is incorrect.');
+        await expect(authService.login({
+            email,
+            password: 'new-password123',
+        })).resolves.toMatchObject({
+            user: { email },
+        });
+        await expect(authService.verifyPasswordResetToken(token ?? ''))
+            .rejects.toThrow('Password reset link is invalid or expired.');
     });
 });

@@ -48,3 +48,11 @@ model QuestionUpvotes {
 
     @@unique([userId, questionId])
 }
+
+model PendingPasswordReset {
+    id        String   @id @default(uuid())
+    email     String
+    token     String   @unique
+    createdAt DateTime @default(now())
+    expiresAt DateTime
+}

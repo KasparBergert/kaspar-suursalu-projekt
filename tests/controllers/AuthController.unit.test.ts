@@ -25,13 +25,19 @@ describe('AuthController', () => {
         token: 'jwt-token',
     };
 
-    let authService: Pick<AuthService, 'register' | 'login' | 'logout'>;
+    let authService: Pick<
+        AuthService,
+        'register' | 'login' | 'logout' | 'requestPasswordReset' | 'verifyPasswordResetToken' | 'resetPassword'
+    >;
 
     beforeEach(() => {
         authService = {
             register: vi.fn(),
             login: vi.fn(),
             logout: vi.fn(),
+            requestPasswordReset: vi.fn(),
+            verifyPasswordResetToken: vi.fn(),
+            resetPassword: vi.fn(),
         };
     });
 
@@ -129,6 +135,68 @@ describe('AuthController', () => {
         expect(authService.logout).not.toHaveBeenCalled();
         expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({ error: 'Authentication token is required.' });
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    it('requests a password reset email without exposing a token in the response', async () => {
+        vi.mocked(authService.requestPasswordReset).mockResolvedValue({
+            message: 'If that email exists, a password reset link has been sent.',
+        });
+        const req = {
+            body: {
+                email: 'kaspar@example.com',
+            },
+        } as Request;
+        const res = createResponse();
+        const next = vi.fn() as NextFunction;
+
+        await new AuthController(authService as AuthService).requestPasswordReset(req, res, next);
+
+        expect(authService.requestPasswordReset).toHaveBeenCalledWith(req.body);
+        expect(res.json).toHaveBeenCalledWith({
+            message: 'If that email exists, a password reset link has been sent.',
+        });
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    it('verifies a password reset token from the reset URL', async () => {
+        vi.mocked(authService.verifyPasswordResetToken).mockResolvedValue({
+            email: 'kaspar@example.com',
+        });
+        const req = {
+            params: {
+                token: 'reset-token',
+            },
+        } as unknown as Request;
+        const res = createResponse();
+        const next = vi.fn() as NextFunction;
+
+        await new AuthController(authService as AuthService).verifyPasswordResetToken(req, res, next);
+
+        expect(authService.verifyPasswordResetToken).toHaveBeenCalledWith('reset-token');
+        expect(res.json).toHaveBeenCalledWith({ email: 'kaspar@example.com' });
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    it('resets a password with the reset URL token', async () => {
+        vi.mocked(authService.resetPassword).mockResolvedValue({
+            message: 'Password has been reset.',
+        });
+        const req = {
+            params: {
+                token: 'reset-token',
+            },
+            body: {
+                password: 'new-password123',
+            },
+        } as unknown as Request;
+        const res = createResponse();
+        const next = vi.fn() as NextFunction;
+
+        await new AuthController(authService as AuthService).resetPassword(req, res, next);
+
+        expect(authService.resetPassword).toHaveBeenCalledWith('reset-token', req.body);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Password has been reset.' });
         expect(next).not.toHaveBeenCalled();
     });
 });

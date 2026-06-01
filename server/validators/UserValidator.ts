@@ -1,5 +1,7 @@
 import type {
     LoginData,
+    PasswordResetData,
+    PasswordResetRequestData,
     RegisterData,
 } from '../interfaces/UserInterfaces.ts';
 import { isObject } from '../utils/isObject.ts';
@@ -22,6 +24,22 @@ export function assertLoginData(data: unknown): asserts data is LoginData {
     }
 
     assertEmail(data.email);
+    assertPassword(data.password);
+}
+
+export function assertPasswordResetRequestData(data: unknown): asserts data is PasswordResetRequestData {
+    if (!isObject(data)) {
+        throw new Error('Password reset request data must be an object.');
+    }
+
+    assertEmail(data.email);
+}
+
+export function assertPasswordResetData(data: unknown): asserts data is PasswordResetData {
+    if (!isObject(data)) {
+        throw new Error('Password reset data must be an object.');
+    }
+
     assertPassword(data.password);
 }
 

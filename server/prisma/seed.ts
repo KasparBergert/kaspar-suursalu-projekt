@@ -72,6 +72,7 @@ async function seedDatabase(): Promise<void> {
 }
 
 async function clearDatabase(): Promise<void> {
+    await prisma.pendingPasswordReset.deleteMany({});
     await prisma.questionUpvotes.deleteMany({});
     await prisma.comments.deleteMany({});
     await prisma.questions.deleteMany({});

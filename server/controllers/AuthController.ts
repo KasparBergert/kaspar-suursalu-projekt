@@ -41,4 +41,48 @@ export class AuthController {
             next(error);
         }
     };
+
+    requestPasswordReset = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const result = await this.authService.requestPasswordReset(req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(400);
+            next(error);
+        }
+    };
+
+    verifyPasswordResetToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        const token = req.params.token;
+
+        if (!token) {
+            res.status(400).json({ error: 'Password reset token is required.' });
+            return;
+        }
+
+        try {
+            const result = await this.authService.verifyPasswordResetToken(token);
+            res.json(result);
+        } catch (error) {
+            res.status(404);
+            next(error);
+        }
+    };
+
+    resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        const token = req.params.token;
+
+        if (!token) {
+            res.status(400).json({ error: 'Password reset token is required.' });
+            return;
+        }
+
+        try {
+            const result = await this.authService.resetPassword(token, req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(400);
+            next(error);
+        }
+    };
 }
