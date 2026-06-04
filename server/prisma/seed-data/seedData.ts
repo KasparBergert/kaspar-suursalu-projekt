@@ -39,6 +39,31 @@ const names = [
     'Oliver Mets',
 ];
 
+const generatedQuestionTitles = [
+    'Why does my local API work in tests but fail in the browser?',
+    'How do I decide what belongs in a composable?',
+    'What is the easiest way to debug Prisma relations?',
+    'Should a school project use one store or multiple stores?',
+    'How do I keep a Vue page from becoming too large?',
+    'When should frontend state be reset after submitting a form?',
+    'How should I name API response types?',
+    'What makes a database seed file useful for demos?',
+    'How do I show loading states without making the UI noisy?',
+    'Should profile pages reuse the same question card as the feed?',
+    'What is a simple way to test authenticated endpoints?',
+    'How do I make modal forms feel less confusing?',
+    'Should search be instant or wait for the user to press enter?',
+    'How much validation should a first version include?',
+    'What should happen after a question is created?',
+    'How do I avoid repeating mapper code in services?',
+    'When is it okay to store images in the database?',
+    'How can I make a local app easier for a teacher to launch?',
+    'Should buttons say exactly what action they perform?',
+    'What is the cleanest way to show API errors in Vue?',
+];
+
+const seedAuthors = ['kaspar', 'marta', 'rasmus', 'liis', 'oliver'];
+
 const questionTemplates: QuestionTemplate[] = [
     {
         key: 'frontend-structure',
@@ -268,6 +293,26 @@ const questionTemplates: QuestionTemplate[] = [
             },
         ],
     },
+    ...generatedQuestionTitles.map((title, index): QuestionTemplate => {
+        const author = seedAuthors[index % seedAuthors.length] ?? 'kaspar';
+        const commenter = seedAuthors[(index + 1) % seedAuthors.length] ?? 'marta';
+        const firstUpvoter = seedAuthors[(index + 2) % seedAuthors.length] ?? 'rasmus';
+        const secondUpvoter = seedAuthors[(index + 3) % seedAuthors.length] ?? 'liis';
+
+        return {
+            key: `generated-question-${index + 1}`,
+            author,
+            title,
+            description: `This is generated seed question ${index + 1}. It exists so the local feed has enough realistic-looking data to scroll, search, and test.`,
+            upvoters: [firstUpvoter, secondUpvoter],
+            comments: [
+                {
+                    author: commenter,
+                    text: 'This is a generated seed answer so the card has comment data during local testing.',
+                },
+            ],
+        };
+    }),
 ];
 
 export const users: SeedUser[] = names.map((name) => ({
