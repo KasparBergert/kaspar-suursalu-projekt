@@ -184,6 +184,33 @@
     border-bottom-color: #2f6fce;
 }
 
+.ask-panel-image-picker {
+    display: inline-flex;
+    width: fit-content;
+    min-height: 38px;
+    align-items: center;
+    margin-top: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 0 14px;
+}
+
+.ask-panel-image-picker input {
+    display: none;
+}
+
+.ask-panel-image-preview {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    margin-top: 14px;
+    border-radius: 6px;
+}
+
 .ask-panel-footer {
     display: flex;
     align-items: center;

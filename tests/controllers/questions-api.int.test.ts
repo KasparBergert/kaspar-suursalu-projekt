@@ -107,6 +107,68 @@ describe('Questions API integration', () => {
         });
     });
 
+    it('returns a created question image in feed, detail, and profile responses', async () => {
+        const imageSrc = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2w==';
+        const registerResponse = await fetch(`${baseUrl}/api/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: 'Image User',
+                email: `image-${crypto.randomUUID()}@example.com`,
+                password: 'password123',
+            }),
+        });
+        const auth = await registerResponse.json();
+
+        const createResponse = await fetch(`${baseUrl}/api/questions`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${auth.token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: 'Can a question show a JPG?',
+                description: 'The image should come back when the question is loaded.',
+                imageSrc,
+            }),
+        });
+        const createdQuestion = await createResponse.json();
+
+        const feedResponse = await fetch(`${baseUrl}/api/questions`);
+        const feed = await feedResponse.json();
+
+        const detailResponse = await fetch(`${baseUrl}/api/questions/${createdQuestion.id}`);
+        const detail = await detailResponse.json();
+
+        const profileResponse = await fetch(`${baseUrl}/api/profile/questions`, {
+            headers: {
+                Authorization: `Bearer ${auth.token}`,
+            },
+        });
+        const profile = await profileResponse.json();
+
+        expect(createResponse.status).toBe(201);
+        expect(createdQuestion).toMatchObject({
+            title: 'Can a question show a JPG?',
+            description: 'The image should come back when the question is loaded.',
+            imageSrc,
+        });
+        expect(feed.data[0]).toMatchObject({
+            id: createdQuestion.id,
+            imageSrc,
+        });
+        expect(detail.question).toMatchObject({
+            id: createdQuestion.id,
+            imageSrc,
+        });
+        expect(profile.data[0]).toMatchObject({
+            id: createdQuestion.id,
+            imageSrc,
+        });
+    });
+
     it('allows the 127.0.0.1 Vite origin to load the API', async () => {
         const response = await fetch(`${baseUrl}/api/questions`, {
             headers: {

@@ -8,16 +8,20 @@ import type {
     QuestionData,
     QuestionWithCommentsData,
 } from '../interfaces/QuestionInterfaces.ts';
+import { QuestionImageService } from './QuestionImageService.ts';
 
 const questionsPageLimit = 10;
 
 export class QuestionsService {
+    private readonly imageService = new QuestionImageService();
+
     async createQuestion(data: CreateQuestionData): Promise<QuestionData> {
         const question = await prisma.questions.create({
             data: {
                 userId: data.userId,
                 title: data.title,
                 description: data.description,
+                imageData: this.imageService.toDatabaseBytes(data.imageSrc),
             },
             include: {
                 user: {
@@ -34,14 +38,7 @@ export class QuestionsService {
             },
         });
 
-        return {
-            id: question.id,
-            title: question.title,
-            description: question.description,
-            upvotes: question.upvotes,
-            commentCount: question._count.comments,
-            user: question.user,
-        };
+        return this.toQuestionData(question);
     }
 
     async addAnswerToQuestion(data: AddAnswerData): Promise<CommentData> {
@@ -124,14 +121,7 @@ export class QuestionsService {
         ]);
 
         return {
-            data: questions.map((question) => ({
-                id: question.id,
-                title: question.title,
-                description: question.description,
-                upvotes: question.upvotes,
-                commentCount: question._count.comments,
-                user: question.user,
-            })),
+            data: questions.map((question) => this.toQuestionData(question)),
             page,
             limit,
             total,
@@ -197,12 +187,7 @@ export class QuestionsService {
 
         return {
             question: {
-                id: question.id,
-                title: question.title,
-                description: question.description,
-                upvotes: question.upvotes,
-                commentCount: question._count.comments,
-                user: question.user,
+                ...this.toQuestionData(question),
             },
             comments: {
                 data: comments.map((comment) => ({
@@ -266,10 +251,28 @@ export class QuestionsService {
             });
         });
 
+        return this.toQuestionData(question);
+    }
+
+    private toQuestionData(question: {
+        id: string;
+        title: string;
+        description: string;
+        imageData?: Uint8Array | Buffer | null;
+        upvotes: number;
+        _count: {
+            comments: number;
+        };
+        user: {
+            id: string;
+            name: string;
+        };
+    }): QuestionData {
         return {
             id: question.id,
             title: question.title,
             description: question.description,
+            imageSrc: this.imageService.toImageSrc(question.imageData),
             upvotes: question.upvotes,
             commentCount: question._count.comments,
             user: question.user,

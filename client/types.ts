@@ -30,6 +30,7 @@ export type QuestionData = {
     id: string;
     title: string;
     description: string;
+    imageSrc?: string;
     upvotes: number;
     commentCount: number;
     user: QuestionUserData;
@@ -75,6 +76,7 @@ export type RegisterPayload = AuthCredentials & {
 export type CreateQuestionPayload = {
     title: string;
     description: string;
+    imageSrc?: string;
 };
 
 export type AuthPageModel = AuthFormModel & {

@@ -1,5 +1,8 @@
 import prisma from './main.ts';
 import { comments, questions, seedPassword, users } from './seed-data/seedData.ts';
+import { QuestionImageService } from '../services/QuestionImageService.ts';
+
+const imageService = new QuestionImageService();
 
 async function seedDatabase(): Promise<void> {
     await clearDatabase();
@@ -29,6 +32,7 @@ async function seedDatabase(): Promise<void> {
                 userId: author.id,
                 title: question.title,
                 description: question.description,
+                imageData: await readSeedImage(question.key),
             },
             select: {
                 id: true,
@@ -69,6 +73,18 @@ async function seedDatabase(): Promise<void> {
             },
         });
     }
+}
+
+async function readSeedImage(questionKey: string): Promise<Uint8Array | undefined> {
+    const imageFile = Bun.file(`server/prisma/seed-images/${questionKey}.jpg`);
+
+    if (!(await imageFile.exists())) {
+        return undefined;
+    }
+
+    const base64 = Buffer.from(await imageFile.arrayBuffer()).toString('base64');
+
+    return imageService.toDatabaseBytes(base64);
 }
 
 async function clearDatabase(): Promise<void> {

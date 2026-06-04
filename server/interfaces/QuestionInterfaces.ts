@@ -20,6 +20,7 @@ export interface QuestionData {
     id: string;
     title: string;
     description: string;
+    imageSrc?: string;
     upvotes: number;
     commentCount: number;
     user: QuestionUserData;
@@ -41,6 +42,7 @@ export interface CreateQuestionData {
     userId: string;
     title: string;
     description: string;
+    imageSrc?: string;
 }
 
 export interface AddAnswerData {

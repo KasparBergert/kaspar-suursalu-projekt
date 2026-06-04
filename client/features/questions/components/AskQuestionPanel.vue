@@ -14,14 +14,32 @@ const emit = defineEmits<{
 
 const title = ref('');
 const description = ref('');
+const imageSrc = ref<string | undefined>();
 
 function submit(): void {
     emit('submit', {
         description: description.value,
+        imageSrc: imageSrc.value,
         title: title.value,
     });
     title.value = '';
     description.value = '';
+    imageSrc.value = undefined;
+}
+
+function updateImage(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+
+    if (!file) {
+        imageSrc.value = undefined;
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+        imageSrc.value = typeof reader.result === 'string' ? reader.result : undefined;
+    });
+    reader.readAsDataURL(file);
 }
 </script>
 
@@ -46,6 +64,18 @@ function submit(): void {
                     rows="8"
                     required
                 />
+
+                <label class="ask-panel-image-picker">
+                    Add JPG image
+                    <input type="file" accept="image/jpeg" @change="updateImage">
+                </label>
+
+                <img
+                    v-if="imageSrc"
+                    class="ask-panel-image-preview"
+                    :src="imageSrc"
+                    alt=""
+                >
 
                 <div class="ask-panel-footer">
                     <button class="ask-panel-cancel" type="button" @click="emit('close')">

@@ -19,6 +19,7 @@ export class QuestionsController {
                 userId: user.id,
                 title: req.body?.title,
                 description: req.body?.description,
+                imageSrc: req.body?.imageSrc,
             });
 
             res.status(201).json(question);

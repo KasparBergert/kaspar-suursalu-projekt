@@ -30,6 +30,12 @@ const emit = defineEmits<{
             <QuestionByline :question="model.question" :show-author="model.detail.showAuthor" />
             <span class="question-title">{{ model.question.title }}</span>
             <span class="question-description">{{ model.question.description }}</span>
+            <img
+                v-if="model.question.imageSrc"
+                class="question-image"
+                :src="model.question.imageSrc"
+                alt=""
+            >
         </div>
         <QuestionCardActions :context="context" :question="model.question" />
 
