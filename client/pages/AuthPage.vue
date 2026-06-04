@@ -7,6 +7,7 @@ import ResetPasswordForm from '../features/auth/components/ResetPasswordForm.vue
 import { usePasswordReset } from '../features/auth/composables/usePasswordReset.ts';
 import { useNotice } from '../shared/composables/useNotice.ts';
 import { useAuthStore } from '../stores/useAuthStore.ts';
+import loginPageBackground from '../../server/assets/login-page-backgound.png';
 
 const auth = useAuthStore();
 const passwordReset = usePasswordReset(useNotice());
@@ -24,7 +25,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <main class="auth-page">
+    <main class="auth-page" :style="{ backgroundImage: `url(${loginPageBackground})` }">
         <section class="auth-card">
             <div class="auth-heading">
                 <h1>Quora</h1>
