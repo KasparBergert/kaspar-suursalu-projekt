@@ -127,12 +127,17 @@
 
 .comment-button {
     display: inline-flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     justify-content: center;
-    min-width: 64px;
-    padding: 0 12px;
+    min-width: 52px;
+    min-height: 32px;
+    padding: 0 10px;
     border-radius: 18px;
+    font-size: 13px;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
 }
 
 .action-icon {
