@@ -52,6 +52,20 @@
     font-size: 15px;
 }
 
+.topbar-search input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-color);
+    font-size: 15px;
+    padding: 0;
+}
+
+.topbar-search input:focus {
+    outline: none;
+}
+
 .search-icon {
     width: 18px;
     height: 18px;

@@ -60,53 +60,6 @@ export function useAuth(session: Session, notice: Notice) {
         }
     }
 
-    async function requestPasswordReset(email: string): Promise<boolean> {
-        isSubmitting.value = true;
-        notice.clearNotice();
-
-        try {
-            const result = await authApi.requestPasswordReset({ email });
-            notice.showMessage(result.message);
-            return true;
-        } catch (error) {
-            notice.showError(error);
-            return false;
-        } finally {
-            isSubmitting.value = false;
-        }
-    }
-
-    async function verifyPasswordResetToken(token: string): Promise<boolean> {
-        isSubmitting.value = true;
-        notice.clearNotice();
-
-        try {
-            await authApi.verifyPasswordResetToken(token);
-            return true;
-        } catch (error) {
-            notice.showError(error);
-            return false;
-        } finally {
-            isSubmitting.value = false;
-        }
-    }
-
-    async function resetPassword(token: string, password: string): Promise<boolean> {
-        isSubmitting.value = true;
-        notice.clearNotice();
-
-        try {
-            const result = await authApi.resetPassword(token, { password });
-            notice.showMessage(result.message);
-            return true;
-        } catch (error) {
-            notice.showError(error);
-            return false;
-        } finally {
-            isSubmitting.value = false;
-        }
-    }
-
     function switchAuthMode(nextMode: AuthMode): void {
         authMode.value = nextMode;
         notice.clearNotice();
@@ -117,10 +70,7 @@ export function useAuth(session: Session, notice: Notice) {
         isSubmitting,
         loadProfile,
         logout,
-        requestPasswordReset,
-        resetPassword,
         submitAuth,
         switchAuthMode,
-        verifyPasswordResetToken,
     };
 }

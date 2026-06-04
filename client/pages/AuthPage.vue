@@ -1,11 +1,26 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import ForgotPasswordForm from '../features/auth/components/ForgotPasswordForm.vue';
 import LoginForm from '../features/auth/components/LoginForm.vue';
 import RegisterForm from '../features/auth/components/RegisterForm.vue';
 import ResetPasswordForm from '../features/auth/components/ResetPasswordForm.vue';
-import { useAppStore } from '../stores/useAppStore.ts';
+import { usePasswordReset } from '../features/auth/composables/usePasswordReset.ts';
+import { useNotice } from '../shared/composables/useNotice.ts';
+import { useAuthStore } from '../stores/useAuthStore.ts';
 
-const app = useAppStore();
+const auth = useAuthStore();
+const passwordReset = usePasswordReset(useNotice());
+
+onMounted(async () => {
+    const resetToken = new URLSearchParams(window.location.search).get('resetToken');
+
+    if (!resetToken) {
+        return;
+    }
+
+    auth.openResetPasswordForm(resetToken);
+    await passwordReset.verifyPasswordResetToken(resetToken);
+});
 </script>
 
 <template>
@@ -18,27 +33,19 @@ const app = useAppStore();
 
             <div class="auth-body">
                 <LoginForm
-                    v-if="app.authPageModel.value.mode === 'login'"
-                    :actions="app.authPageActions"
-                    :model="app.authPageModel.value"
+                    v-if="auth.authPageModel.value.mode === 'login'"
                 />
 
                 <RegisterForm
-                    v-else-if="app.authPageModel.value.mode === 'register'"
-                    :actions="app.authPageActions"
-                    :model="app.authPageModel.value"
+                    v-else-if="auth.authPageModel.value.mode === 'register'"
                 />
 
                 <ForgotPasswordForm
-                    v-else-if="app.authPageModel.value.mode === 'forgot-password'"
-                    :actions="app.authPageActions"
-                    :model="app.authPageModel.value"
+                    v-else-if="auth.authPageModel.value.mode === 'forgot-password'"
                 />
 
                 <ResetPasswordForm
                     v-else
-                    :actions="app.authPageActions"
-                    :model="app.authPageModel.value"
                 />
             </div>
         </section>

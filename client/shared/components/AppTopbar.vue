@@ -2,22 +2,19 @@
 import TopbarAccount from './TopbarAccount.vue';
 import TopbarNav from './TopbarNav.vue';
 import TopbarSearch from './TopbarSearch.vue';
-import type { TopbarActions, TopbarModel } from '../../types.ts';
+import { useAppStore } from '../../stores/useAppStore.ts';
 
-defineProps<{
-    actions: TopbarActions;
-    model: TopbarModel;
-}>();
+const app = useAppStore();
 </script>
 
 <template>
     <header class="topbar">
-        <button class="brand" type="button" @click="actions.showFeed">
+        <button class="brand" type="button" @click="app.showFeed">
             Quora
         </button>
 
-        <TopbarNav :actions="actions" :model="model" />
+        <TopbarNav />
         <TopbarSearch />
-        <TopbarAccount :actions="actions" :model="model" />
+        <TopbarAccount />
     </header>
 </template>

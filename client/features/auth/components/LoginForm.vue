@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import AuthNotice from './AuthNotice.vue';
-import type { AuthCredentials, AuthPageActions, AuthFormModel } from '../../../types.ts';
+import { useAuthStore } from '../../../stores/useAuthStore.ts';
+import type { AuthCredentials } from '../../../types.ts';
 
-const props = defineProps<{
-    actions: Pick<AuthPageActions, 'forgotPassword' | 'showRegister' | 'submit'>;
-    model: AuthFormModel;
-}>();
+const auth = useAuthStore();
+const model = auth.authPageModel;
 
 const form = ref<AuthCredentials>({
     email: '',
@@ -14,7 +13,7 @@ const form = ref<AuthCredentials>({
 });
 
 function submit(): void {
-    void props.actions.submit({ ...form.value });
+    void auth.submitAuth({ ...form.value });
 }
 </script>
 
@@ -39,14 +38,14 @@ function submit(): void {
         </label>
 
         <div class="auth-submit-row">
-            <button class="forgot-password-button" type="button" @click="actions.forgotPassword">
+            <button class="forgot-password-button" type="button" @click="auth.toggleForgotPassword">
                 Forgot password?
             </button>
             <button class="login-submit-button" type="submit" :disabled="model.isSubmitting">
                 Login
             </button>
         </div>
-        <button class="auth-switch-button" type="button" @click="actions.showRegister">
+        <button class="auth-switch-button" type="button" @click="auth.showRegisterPage">
             Create account
         </button>
     </form>

@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import AuthNotice from './AuthNotice.vue';
-import type { AuthPageActions, AuthFormModel, RegisterPayload } from '../../../types.ts';
+import { useAuthStore } from '../../../stores/useAuthStore.ts';
+import type { RegisterPayload } from '../../../types.ts';
 
-const props = defineProps<{
-    actions: Pick<AuthPageActions, 'showLogin' | 'submit'>;
-    model: AuthFormModel;
-}>();
+const auth = useAuthStore();
+const model = auth.authPageModel;
 
 const form = ref<RegisterPayload>({
     email: '',
@@ -15,7 +14,7 @@ const form = ref<RegisterPayload>({
 });
 
 function submit(): void {
-    void props.actions.submit({ ...form.value });
+    void auth.submitAuth({ ...form.value });
 }
 </script>
 
@@ -48,7 +47,7 @@ function submit(): void {
                 Register
             </button>
         </div>
-        <button class="auth-switch-button" type="button" @click="actions.showLogin">
+        <button class="auth-switch-button" type="button" @click="auth.showLoginPage">
             Already have an account? Login
         </button>
     </form>

@@ -1,17 +1,27 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import AuthNotice from './AuthNotice.vue';
-import type { AuthPageActions, AuthFormModel } from '../../../types.ts';
+import { usePasswordReset } from '../composables/usePasswordReset.ts';
+import { useNotice } from '../../../shared/composables/useNotice.ts';
+import { useAuthStore } from '../../../stores/useAuthStore.ts';
 
-const props = defineProps<{
-    actions: Pick<AuthPageActions, 'resetPassword'>;
-    model: AuthFormModel;
-}>();
+const auth = useAuthStore();
+const model = auth.authPageModel;
+const passwordReset = usePasswordReset(useNotice());
 
 const password = ref('');
+const isSubmitting = ref(false);
 
-function submit(): void {
-    void props.actions.resetPassword(password.value);
+async function submit(): Promise<void> {
+    isSubmitting.value = true;
+    const didReset = await passwordReset.resetPassword(auth.authPage.passwordResetToken.value, password.value);
+    isSubmitting.value = false;
+
+    if (didReset) {
+        auth.showLoginPage();
+        auth.authPage.clearResetToken();
+        window.history.replaceState({}, '', window.location.pathname);
+    }
 }
 </script>
 
@@ -32,7 +42,11 @@ function submit(): void {
         </label>
 
         <div class="auth-submit-row auth-submit-row-end">
-            <button class="login-submit-button login-submit-button-wide" type="submit" :disabled="model.isSubmitting">
+            <button
+                class="login-submit-button login-submit-button-wide"
+                type="submit"
+                :disabled="model.isSubmitting || isSubmitting"
+            >
                 Reset password
             </button>
         </div>

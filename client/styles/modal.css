@@ -10,15 +10,15 @@
 
 .modal-dialog {
     display: grid;
-    gap: 16px;
-    width: min(520px, 100%);
-    max-height: min(720px, calc(100vh - 36px));
+    gap: 0;
+    width: min(920px, 100%);
+    max-height: min(760px, calc(100vh - 36px));
     overflow: auto;
-    border: 1px solid var(--border-strong-color);
-    border-radius: 8px;
-    background: var(--panel-bg);
-    padding: 18px;
-    box-shadow: 0 24px 80px var(--shadow-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: #171717;
+    padding: 0;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.58);
 }
 
 .modal-header {
@@ -41,4 +41,167 @@
     border-radius: 50%;
     font-size: 22px;
     line-height: 1;
+}
+
+.ask-panel {
+    display: grid;
+}
+
+.ask-panel-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ask-panel-tab {
+    min-height: 56px;
+    border: 0;
+    border-bottom: 4px solid transparent;
+    background: transparent;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.ask-panel-tab.is-active {
+    border-bottom-color: #2f6fce;
+    color: #ffffff;
+}
+
+.ask-panel-body {
+    position: relative;
+    display: grid;
+    gap: 20px;
+    padding: 22px 28px 18px;
+}
+
+.ask-panel-close {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.ask-panel-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.ask-panel-tip {
+    display: grid;
+    gap: 8px;
+    padding: 18px 18px 16px;
+    border-radius: 4px;
+    background: #28304b;
+    color: #5fa0ff;
+}
+
+.ask-panel-tip h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.ask-panel-tip ul {
+    margin: 0;
+    padding-left: 22px;
+}
+
+.ask-panel-tip li {
+    margin: 6px 0;
+    font-size: 16px;
+    line-height: 1.35;
+}
+
+.ask-panel-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ask-panel-audience,
+.ask-panel-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: transparent;
+    color: #f4f4f4;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 0 14px;
+}
+
+.ask-panel-mini {
+    width: 38px;
+    justify-content: center;
+    padding: 0;
+}
+
+.ask-panel-form {
+    display: grid;
+    gap: 0;
+}
+
+.ask-panel-title,
+.ask-panel-description {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 0;
+    background: transparent;
+    color: #ffffff;
+}
+
+.ask-panel-title {
+    min-height: 54px;
+    padding: 0 0 10px;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.ask-panel-description {
+    min-height: 300px;
+    padding: 16px 0 0;
+    font-size: 18px;
+    resize: vertical;
+}
+
+.ask-panel-title:focus,
+.ask-panel-description:focus {
+    outline: none;
+    border-bottom-color: #2f6fce;
+}
+
+.ask-panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 18px;
+}
+
+.ask-panel-cancel {
+    border: 0;
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.ask-panel-submit {
+    min-height: 42px;
+    padding: 0 22px;
 }

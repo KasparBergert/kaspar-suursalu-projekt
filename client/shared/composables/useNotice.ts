@@ -1,10 +1,10 @@
 import { ref } from 'vue';
 import { getErrorMessage } from '../../utils/errors.ts';
 
-export function useNotice() {
-    const message = ref('');
-    const errorMessage = ref('');
+const message = ref('');
+const errorMessage = ref('');
 
+export function useNotice() {
     function clearNotice(): void {
         message.value = '';
         errorMessage.value = '';
