@@ -6,7 +6,7 @@ import type { useSelectedQuestion } from './useSelectedQuestion.ts';
 type QuestionCollections = ReturnType<typeof useQuestionCollections>;
 type SelectedQuestion = ReturnType<typeof useSelectedQuestion>;
 
-export async function postQuestion(
+export async function createQuestion(
     payload: CreateQuestionPayload,
     token: string,
     collections: QuestionCollections,
@@ -31,7 +31,7 @@ export async function upvoteQuestion(
     selectedQuestion.updateSelectedQuestion(updatedQuestion);
 }
 
-export async function postAnswer(
+export async function addAnswer(
     questionId: string,
     text: string,
     token: string,

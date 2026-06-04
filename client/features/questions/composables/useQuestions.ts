@@ -4,7 +4,7 @@ import type {
     QuestionData,
 } from '../../../types.ts';
 import type { useNotice } from '../../../shared/composables/useNotice.ts';
-import { postAnswer, postQuestion, upvoteQuestion } from './questionCommands.ts';
+import { addAnswer as addQuestionAnswer, createQuestion as createQuestionCommand, upvoteQuestion } from './questionCommands.ts';
 import { runQuestionTask } from './runQuestionTask.ts';
 import { useQuestionCollections } from './useQuestionCollections.ts';
 import { useSelectedQuestion } from './useSelectedQuestion.ts';
@@ -59,11 +59,11 @@ export function useQuestions(
 
     async function createQuestion(payload: CreateQuestionPayload): Promise<boolean> {
         const question = await runQuestionTask(isSubmitting, notice, () => (
-            postQuestion(payload, token.value, collections, selectedQuestion)
+            createQuestionCommand(payload, token.value, collections, selectedQuestion)
         ));
 
         if (question) {
-            notice.showMessage('Question posted.');
+            notice.showMessage('Question created.');
         }
 
         return Boolean(question);
@@ -92,8 +92,8 @@ export function useQuestions(
         }
 
         await runQuestionTask(isSubmitting, notice, async () => {
-            await postAnswer(questionId, text, token.value, selectedQuestion);
-            notice.showMessage('Answer posted.');
+            await addQuestionAnswer(questionId, text, token.value, selectedQuestion);
+            notice.showMessage('Answer added.');
         });
     }
 

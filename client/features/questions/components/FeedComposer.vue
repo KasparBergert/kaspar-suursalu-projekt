@@ -16,7 +16,7 @@ const questionStore = useQuestionStore();
                 {{ user?.name.charAt(0).toUpperCase() ?? 'K' }}
             </div>
             <button class="composer-input" type="button" @click="questionStore.openAskQuestionModal">
-                What do you want to ask or share?
+                What do you want to ask?
             </button>
         </div>
     </section>

@@ -60,6 +60,7 @@ describe('QuestionsService', () => {
 
     it('creates a question for a user', async () => {
         prisma.questions.create.mockResolvedValue(question);
+        prisma.questions.findUnique.mockResolvedValue(question);
 
         const result = await new QuestionsService().createQuestion({
             userId: 'user-1',

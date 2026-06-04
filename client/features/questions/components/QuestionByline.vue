@@ -10,8 +10,8 @@ const props = defineProps<{
 const sharedAtLabel = computed(() => `Shared ${formatRelativeTime(props.question.createdAt)}`);
 
 function formatRelativeTime(value: string): string {
-    const postedAt = new Date(value);
-    const secondsAgo = Math.max(0, Math.floor((Date.now() - postedAt.getTime()) / 1000));
+    const sharedAt = new Date(value);
+    const secondsAgo = Math.max(0, Math.floor((Date.now() - sharedAt.getTime()) / 1000));
 
     if (secondsAgo < 60) {
         return 'just now';
@@ -35,7 +35,7 @@ function formatRelativeTime(value: string): string {
         return `${daysAgo} ${daysAgo === 1 ? 'day' : 'days'} ago`;
     }
 
-    return postedAt.toLocaleDateString(undefined, {
+    return sharedAt.toLocaleDateString(undefined, {
         day: 'numeric',
         month: 'short',
         year: 'numeric',

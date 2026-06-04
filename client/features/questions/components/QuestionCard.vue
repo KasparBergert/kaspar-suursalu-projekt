@@ -38,7 +38,7 @@ const emit = defineEmits<{
             >
         </div>
         <QuestionCardActions :context="context" :question="model.question" />
-
+        
         <QuestionDetail
             v-if="model.isSelected"
             :model="model.detail"

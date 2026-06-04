@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, MessageCircle, MoreHorizontal, Repeat2 } from 'lucide-vue-next';
+import { ArrowDown, ArrowUp, MessageCircle, MoreHorizontal } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { useQuestionStore } from '../../../stores/useQuestionStore.ts';
 import type { QuestionData } from '../../../types.ts';
@@ -44,9 +44,6 @@ async function upvote(): Promise<void> {
             <MessageCircle class="action-icon" :stroke-width="2.3" />
             <strong>{{ question.commentCount }}</strong>
         </button>
-        <span class="reshare-icon" aria-hidden="true">
-            <Repeat2 class="action-icon" :stroke-width="2.3" />
-        </span>
         <span class="card-menu" aria-hidden="true">
             <MoreHorizontal class="action-icon" :stroke-width="2.6" />
         </span>
