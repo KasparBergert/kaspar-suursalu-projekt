@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowUp, MessageCircle, MoreHorizontal, Repeat2 } from 'lucide-vue-next';
+import { ref } from 'vue';
 import { useQuestionStore } from '../../../stores/useQuestionStore.ts';
 import type { QuestionData } from '../../../types.ts';
 
@@ -9,11 +10,24 @@ const props = defineProps<{
 }>();
 
 const questionStore = useQuestionStore();
+const upvoteIsActive = ref(false);
+
+async function upvote(): Promise<void> {
+    const previousUpvotes = props.question.upvotes;
+
+    await questionStore.upvoteQuestion(props.question);
+    upvoteIsActive.value = props.question.upvotes > previousUpvotes;
+}
 </script>
 
 <template>
     <div class="card-actions">
-        <button class="vote-button" type="button" @click="questionStore.upvoteQuestion(question)">
+        <button
+            class="vote-button"
+            :class="{ 'is-active': upvoteIsActive }"
+            type="button"
+            @click="upvote"
+        >
             <ArrowUp class="action-icon" :stroke-width="2.5" />
             Upvote
             <strong>{{ question.upvotes }}</strong>
