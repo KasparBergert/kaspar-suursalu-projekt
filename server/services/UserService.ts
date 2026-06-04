@@ -30,6 +30,7 @@ export class UserService {
             title: question.title,
             description: question.description,
             imageSrc: this.imageService.toImageSrc(question.imageData),
+            createdAt: question.createdAt,
             upvotes: question.upvotes,
             commentCount: question._count.comments,
             user: question.user,

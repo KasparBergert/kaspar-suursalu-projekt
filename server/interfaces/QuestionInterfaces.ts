@@ -21,6 +21,7 @@ export interface QuestionData {
     title: string;
     description: string;
     imageSrc?: string;
+    createdAt: Date;
     upvotes: number;
     commentCount: number;
     user: QuestionUserData;

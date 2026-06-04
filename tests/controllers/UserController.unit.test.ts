@@ -28,6 +28,7 @@ describe('UserController', () => {
         id: 'question-1',
         title: 'How does this work?',
         description: 'I want to understand the flow.',
+        createdAt: new Date('2026-05-06T12:00:00.000Z'),
         upvotes: 3,
         commentCount: 2,
         user: {

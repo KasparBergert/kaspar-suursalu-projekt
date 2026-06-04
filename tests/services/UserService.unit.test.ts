@@ -22,6 +22,7 @@ const question = {
     userId: 'user-1',
     title: 'What is clean code?',
     description: 'I want a practical answer.',
+    createdAt: new Date('2026-05-06T12:00:00.000Z'),
     upvotes: 5,
     user,
     _count: {
@@ -44,6 +45,7 @@ describe('UserService', () => {
                 id: 'question-1',
                 title: 'What is clean code?',
                 description: 'I want a practical answer.',
+                createdAt: new Date('2026-05-06T12:00:00.000Z'),
                 upvotes: 5,
                 commentCount: 1,
                 user,

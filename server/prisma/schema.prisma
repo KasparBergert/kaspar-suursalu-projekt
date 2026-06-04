@@ -23,6 +23,7 @@ model Questions {
     title       String
     description String
     imageData   Bytes?
+    createdAt   DateTime           @default(now())
     upvotes     Int                @default(0)
     comments    Comments[]
     upvotedBy   QuestionUpvotes[]

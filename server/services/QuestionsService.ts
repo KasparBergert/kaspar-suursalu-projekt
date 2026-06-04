@@ -246,6 +246,7 @@ export class QuestionsService {
         title: string;
         description: string;
         imageData?: Uint8Array | Buffer | null;
+        createdAt: Date;
         upvotes: number;
         _count: {
             comments: number;
@@ -260,6 +261,7 @@ export class QuestionsService {
             title: question.title,
             description: question.description,
             imageSrc: this.imageService.toImageSrc(question.imageData),
+            createdAt: question.createdAt,
             upvotes: question.upvotes,
             commentCount: question._count.comments,
             user: question.user,

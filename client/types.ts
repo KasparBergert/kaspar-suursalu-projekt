@@ -31,6 +31,7 @@ export type QuestionData = {
     title: string;
     description: string;
     imageSrc?: string;
+    createdAt: string;
     upvotes: number;
     commentCount: number;
     user: QuestionUserData;
