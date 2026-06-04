@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../server/app.ts';
 import prisma from '../../server/prisma/main.ts';
+import { JwtTokenService } from '../../server/services/JwtTokenService.ts';
 
 let server: Server;
 let baseUrl: string;
@@ -109,23 +110,23 @@ describe('Questions API integration', () => {
 
     it('returns a created question image in feed, detail, and profile responses', async () => {
         const imageSrc = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2w==';
-        const registerResponse = await fetch(`${baseUrl}/api/auth/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+        const user = await prisma.users.create({
+            data: {
                 name: 'Image User',
                 email: `image-${crypto.randomUUID()}@example.com`,
-                password: 'password123',
-            }),
+                password: 'hashed-password',
+            },
         });
-        const auth = await registerResponse.json();
+        const token = await new JwtTokenService(process.env.JWT_SECRET ?? 'development-secret').create({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        });
 
         const createResponse = await fetch(`${baseUrl}/api/questions`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${auth.token}`,
+                Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -144,7 +145,7 @@ describe('Questions API integration', () => {
 
         const profileResponse = await fetch(`${baseUrl}/api/profile/questions`, {
             headers: {
-                Authorization: `Bearer ${auth.token}`,
+                Authorization: `Bearer ${token}`,
             },
         });
         const profile = await profileResponse.json();
