@@ -136,7 +136,8 @@ describe('AuthService integration', () => {
         });
 
         const resetRequest = await authService.requestPasswordReset({ email });
-        const resetUrl = new URL(emailService.resetLinks[0]);
+        expect(emailService.resetLinks[0]).toEqual(expect.any(String));
+        const resetUrl = new URL(emailService.resetLinks[0] as string);
         const token = resetUrl.searchParams.get('resetToken');
 
         expect(resetRequest).toEqual({

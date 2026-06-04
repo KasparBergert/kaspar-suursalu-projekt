@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { AuthService } from '../services/AuthService.ts';
-import { getBearerToken } from '../utils/parseRequest.ts';
+import { getBearerToken, parseRouteParam } from '../utils/parseRequest.ts';
 
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
@@ -53,7 +53,7 @@ export class AuthController {
     };
 
     verifyPasswordResetToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const token = req.params.token;
+        const token = parseRouteParam(req.params.token);
 
         if (!token) {
             res.status(400).json({ error: 'Password reset token is required.' });
@@ -70,7 +70,7 @@ export class AuthController {
     };
 
     resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const token = req.params.token;
+        const token = parseRouteParam(req.params.token);
 
         if (!token) {
             res.status(400).json({ error: 'Password reset token is required.' });

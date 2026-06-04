@@ -69,13 +69,41 @@ export class QuestionsService {
         };
     }
 
-    async getQuestions(pagination: Pick<PaginationData, 'page'>): Promise<PaginatedData<QuestionData>> {
+    async getQuestions(pagination: Pick<PaginationData, 'page'> & { search?: string }): Promise<PaginatedData<QuestionData>> {
         const page = normalizePage(pagination.page);
         const limit = questionsPageLimit;
         const skip = (page - 1) * limit;
+        const search = pagination.search?.trim();
+        const where = search
+            ? {
+                OR: [
+                    {
+                        title: {
+                            contains: search,
+                            mode: 'insensitive' as const,
+                        },
+                    },
+                    {
+                        description: {
+                            contains: search,
+                            mode: 'insensitive' as const,
+                        },
+                    },
+                    {
+                        user: {
+                            name: {
+                                contains: search,
+                                mode: 'insensitive' as const,
+                            },
+                        },
+                    },
+                ],
+            }
+            : undefined;
 
         const [questions, total] = await Promise.all([
             prisma.questions.findMany({
+                where,
                 skip,
                 take: limit,
                 include: {
@@ -92,7 +120,7 @@ export class QuestionsService {
                     },
                 },
             }),
-            prisma.questions.count(),
+            prisma.questions.count({ where }),
         ]);
 
         return {

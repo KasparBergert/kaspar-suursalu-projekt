@@ -16,7 +16,7 @@ export class UserController {
         res.json({ user });
     };
 
-    getMyQuestions = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    getMyQuestions = async (_req: Request, res: Response, next?: NextFunction): Promise<void> => {
         const user = getResponseUser(res);
 
         if (!user) {
@@ -28,7 +28,7 @@ export class UserController {
             const questions = await this.userService.getQuestions(user.id);
             res.json({ data: questions });
         } catch (error) {
-            next(error);
+            next?.(error);
         }
     };
 }

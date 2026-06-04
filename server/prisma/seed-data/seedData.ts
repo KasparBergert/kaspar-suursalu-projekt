@@ -292,7 +292,8 @@ export const comments: SeedComment[] = questionTemplates.flatMap((question) =>
 );
 
 function createEmail(name: string): string {
-    return `${name.split(' ')[0].toLowerCase()}@example.com`;
+    const [firstName = 'user'] = name.split(' ');
+    return `${firstName.toLowerCase()}@example.com`;
 }
 
 function emailFor(firstName: string): string {

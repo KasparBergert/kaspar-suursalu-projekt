@@ -10,6 +10,7 @@
     "dev": "vite",
     "server": "bun run --watch server/server.ts",
     "seed": "bun run server/prisma/seed.ts",
+    "build:dev": "vite build",
     "test": "vitest"
   },
   "repository": {

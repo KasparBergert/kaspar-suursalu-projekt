@@ -6,7 +6,7 @@ import { parseQueryNumber, parseRouteParam } from '../utils/parseRequest.ts';
 export class QuestionsController {
     constructor(private readonly questionsService: QuestionsService) {}
 
-    createQuestion = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    createQuestion = async (req: Request, res: Response, next?: NextFunction): Promise<void> => {
         const user = getResponseUser(res);
 
         if (!user) {
@@ -24,19 +24,20 @@ export class QuestionsController {
             res.status(201).json(question);
         } catch (error) {
             res.status(400);
-            next(error);
+            next?.(error);
         }
     };
 
     getQuestions = async (req: Request, res: Response): Promise<void> => {
         const questions = await this.questionsService.getQuestions({
             page: parseQueryNumber(req.query.page),
+            search: typeof req.query.search === 'string' ? req.query.search : undefined,
         });
 
-        res.json(questions);
+        res.status(200).json(questions);
     };
 
-    getQuestion = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    getQuestion = async (req: Request, res: Response, next?: NextFunction): Promise<void> => {
         const questionId = parseRouteParam(req.params.id);
 
         if (!questionId) {
@@ -53,11 +54,11 @@ export class QuestionsController {
             res.json(question);
         } catch (error) {
             res.status(404);
-            next(error);
+            next?.(error);
         }
     };
 
-    addAnswer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    addAnswer = async (req: Request, res: Response, next?: NextFunction): Promise<void> => {
         const user = getResponseUser(res);
         const questionId = parseRouteParam(req.params.id);
 
@@ -81,11 +82,11 @@ export class QuestionsController {
             res.status(201).json(answer);
         } catch (error) {
             res.status(400);
-            next(error);
+            next?.(error);
         }
     };
 
-    upVoteQuestion = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    upVoteQuestion = async (req: Request, res: Response, next?: NextFunction): Promise<void> => {
         const user = getResponseUser(res);
         const questionId = parseRouteParam(req.params.id);
 
@@ -104,7 +105,7 @@ export class QuestionsController {
             res.json(question);
         } catch (error) {
             res.status(400);
-            next(error);
+            next?.(error);
         }
     };
 }
