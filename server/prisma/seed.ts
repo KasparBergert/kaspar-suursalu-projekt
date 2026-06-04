@@ -75,7 +75,7 @@ async function seedDatabase(): Promise<void> {
     }
 }
 
-async function readSeedImage(questionKey: string): Promise<Uint8Array | undefined> {
+async function readSeedImage(questionKey: string): Promise<Uint8Array<ArrayBuffer> | undefined> {
     const imageFile = Bun.file(`server/prisma/seed-images/${questionKey}.jpg`);
 
     if (!(await imageFile.exists())) {

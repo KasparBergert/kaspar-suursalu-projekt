@@ -23,22 +23,9 @@ export class QuestionsService {
                 description: data.description,
                 imageData: this.imageService.toDatabaseBytes(data.imageSrc),
             },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-                _count: {
-                    select: {
-                        comments: true,
-                    },
-                },
-            },
         });
 
-        return this.toQuestionData(question);
+        return this.getQuestionData(question.id);
     }
 
     async addAnswerToQuestion(data: AddAnswerData): Promise<CommentData> {
@@ -277,6 +264,33 @@ export class QuestionsService {
             commentCount: question._count.comments,
             user: question.user,
         };
+    }
+
+    private async getQuestionData(questionId: string): Promise<QuestionData> {
+        const question = await prisma.questions.findUnique({
+            where: {
+                id: questionId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        comments: true,
+                    },
+                },
+            },
+        });
+
+        if (!question) {
+            throw new Error('Question was not found.');
+        }
+
+        return this.toQuestionData(question);
     }
 }
 
