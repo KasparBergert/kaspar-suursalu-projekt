@@ -18,20 +18,20 @@ export function useQuestionCollections(
         }
     });
 
-    async function loadFeed(nextPage = page.value): Promise<void> {
-        const result = await questionsApi.getQuestions(nextPage);
+    async function loadFeed(nextPage = page.value, search?: string): Promise<void> {
+        const result = await questionsApi.getQuestions(nextPage, search);
 
         questions.value = result.data;
         page.value = result.page;
         totalPages.value = result.totalPages || 1;
     }
 
-    async function loadMoreFeed(): Promise<void> {
+    async function loadMoreFeed(search?: string): Promise<void> {
         if (!hasMoreFeed.value) {
             return;
         }
 
-        const result = await questionsApi.getQuestions(page.value + 1);
+        const result = await questionsApi.getQuestions(page.value + 1, search);
 
         questions.value = [...questions.value, ...result.data];
         page.value = result.page;

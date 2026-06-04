@@ -3,34 +3,28 @@ import QuestionList from '../features/questions/components/QuestionList.vue';
 import AppSidebar from '../shared/components/AppSidebar.vue';
 import AppTopbar from '../shared/components/AppTopbar.vue';
 import NoticeStack from '../shared/components/NoticeStack.vue';
-import { useAppStore } from '../stores/useAppStore.ts';
+import { useNotice } from '../shared/composables/useNotice.ts';
+import { useQuestionStore } from '../stores/useQuestionStore.ts';
 
-const app = useAppStore();
+const notice = useNotice();
+const questionStore = useQuestionStore();
 </script>
 
 <template>
-    <AppTopbar
-        :actions="app.topbarActions"
-        :model="app.topbarModel.value"
-    />
+    <AppTopbar />
 
     <main class="layout">
-        <AppSidebar
-            :is-authenticated="app.session.isAuthenticated.value"
-            @ask-question="app.openAskQuestionModal"
-            @login="app.openLoginPage"
-            @register="app.openRegisterPage"
-        />
+        <AppSidebar />
 
         <section class="content">
             <NoticeStack
-                :error-message="app.notice.errorMessage.value"
-                :message="app.notice.message.value"
+                :error-message="notice.errorMessage.value"
+                :message="notice.message.value"
             />
 
             <QuestionList
-                :actions="app.profileQuestionActions"
-                :model="app.profileModel.value"
+                context="profile"
+                :model="questionStore.profileModel.value"
             />
         </section>
     </main>

@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useQuestionStore } from '../../../stores/useQuestionStore.ts';
 
-defineProps<{
-    isSubmitting: boolean;
-}>();
-
-const emit = defineEmits<{
-    answer: [text: string];
-}>();
-
+const questionStore = useQuestionStore();
 const answerText = ref('');
 
 function submit(): void {
-    emit('answer', answerText.value);
+    void questionStore.answerQuestion(answerText.value);
     answerText.value = '';
 }
 </script>
@@ -21,7 +15,7 @@ function submit(): void {
     <form class="answer-form" @submit.prevent="submit">
         <div class="comment-avatar" aria-hidden="true">K</div>
         <input v-model="answerText" type="text" placeholder="Add a comment..." required>
-        <button class="primary-button" type="submit" :disabled="isSubmitting">
+        <button class="primary-button" type="submit" :disabled="questionStore.isSubmitting.value">
             Comment
         </button>
     </form>

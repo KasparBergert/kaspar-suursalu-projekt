@@ -3,11 +3,15 @@ import { X } from 'lucide-vue-next';
 import QuestionByline from './QuestionByline.vue';
 import QuestionCardActions from './QuestionCardActions.vue';
 import QuestionDetail from './QuestionDetail.vue';
-import type { QuestionCardActions as QuestionCardActionModel, QuestionCardModel } from '../../../types.ts';
+import type { QuestionCardModel } from '../../../types.ts';
 
 defineProps<{
-    actions: QuestionCardActionModel;
+    context?: 'feed' | 'profile';
     model: QuestionCardModel;
+}>();
+
+const emit = defineEmits<{
+    hide: [questionId: string];
 }>();
 </script>
 
@@ -18,7 +22,7 @@ defineProps<{
             type="button"
             aria-label="Hide question"
             data-tooltip="Hide"
-            @click="actions.hide(model.question.id)"
+            @click="emit('hide', model.question.id)"
         >
             <X class="action-icon" :stroke-width="2.2" />
         </button>
@@ -27,12 +31,11 @@ defineProps<{
             <span class="question-title">{{ model.question.title }}</span>
             <span class="question-description">{{ model.question.description }}</span>
         </div>
-        <QuestionCardActions :actions="actions" :question="model.question" />
+        <QuestionCardActions :context="context" :question="model.question" />
 
         <QuestionDetail
             v-if="model.isSelected"
             :model="model.detail"
-            @answer="actions.answer"
         />
     </article>
 </template>

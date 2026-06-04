@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import QuestionCard from './QuestionCard.vue';
-import type { QuestionCardActions, QuestionListActions, QuestionListModel } from '../../../types.ts';
+import type { QuestionListModel } from '../../../types.ts';
 
 const props = defineProps<{
-    actions: QuestionListActions;
+    context?: 'feed' | 'profile';
     model: QuestionListModel;
 }>();
 
@@ -16,11 +16,6 @@ const visibleQuestions = computed(() => (
 function hideQuestion(questionId: string): void {
     hiddenQuestionIds.value = new Set([...hiddenQuestionIds.value, questionId]);
 }
-
-const cardActions = computed<QuestionCardActions>(() => ({
-    ...props.actions,
-    hide: hideQuestion,
-}));
 </script>
 
 <template>
@@ -33,12 +28,13 @@ const cardActions = computed<QuestionCardActions>(() => ({
         <QuestionCard
             v-for="question in visibleQuestions"
             :key="question.id"
-            :actions="cardActions"
+            :context="context"
             :model="{
                 detail: model,
                 isSelected: model.selectedQuestionId === question.id,
                 question,
             }"
+            @hide="hideQuestion"
         />
 
         <div v-if="!visibleQuestions.length && !model.isLoading" class="empty-state">

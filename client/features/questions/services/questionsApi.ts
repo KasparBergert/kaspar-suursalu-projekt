@@ -7,8 +7,15 @@ import type {
 } from '../../../types.ts';
 import { apiRequest } from '../../../utils/apiRequest.ts';
 
-export function getQuestions(page: number): Promise<PaginatedData<QuestionData>> {
-    return apiRequest<PaginatedData<QuestionData>>(`/questions?page=${page}`);
+export function getQuestions(page: number, search?: string): Promise<PaginatedData<QuestionData>> {
+    const query = new URLSearchParams();
+    query.set('page', String(page));
+
+    if (search?.trim()) {
+        query.set('search', search.trim());
+    }
+
+    return apiRequest<PaginatedData<QuestionData>>(`/questions?${query.toString()}`);
 }
 
 export function getQuestion(

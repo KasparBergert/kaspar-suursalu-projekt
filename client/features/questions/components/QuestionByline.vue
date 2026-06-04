@@ -13,11 +13,8 @@ defineProps<{
             {{ question.user.name.charAt(0).toUpperCase() }}
         </div>
         <div>
-            <span v-if="showAuthor" class="question-author">
-                {{ question.user.name }} - Follow
-            </span>
-            <span v-else class="question-author">
-                You - Follow
+            <span class="question-author">
+                {{ showAuthor ? question.user.name : 'You' }}
             </span>
             <span class="question-subline">Shared just now</span>
         </div>

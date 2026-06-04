@@ -21,15 +21,15 @@ export function useQuestions(
     const collections = useQuestionCollections(isAuthenticated, token);
     const selectedQuestion = useSelectedQuestion();
 
-    function loadFeed(nextPage?: number): Promise<void | undefined> {
+    function loadFeed(nextPage?: number, search?: string): Promise<void | undefined> {
         return runQuestionTask(
             isLoading,
             notice,
-            () => collections.loadFeed(nextPage),
+            () => collections.loadFeed(nextPage, search),
         );
     }
 
-    function loadMoreFeed(): Promise<void | undefined> {
+    function loadMoreFeed(search?: string): Promise<void | undefined> {
         if (isLoading.value || !collections.hasMoreFeed.value) {
             return Promise.resolve(undefined);
         }
@@ -37,7 +37,7 @@ export function useQuestions(
         return runQuestionTask(
             isLoading,
             notice,
-            collections.loadMoreFeed,
+            () => collections.loadMoreFeed(search),
         );
     }
 
@@ -109,6 +109,7 @@ export function useQuestions(
         isSubmitting,
         loadFeed,
         loadMoreFeed,
+        loadMyQuestions,
         myQuestions: collections.myQuestions,
         openProfileQuestion,
         page: collections.page,
