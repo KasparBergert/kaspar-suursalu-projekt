@@ -15,7 +15,6 @@ export async function postQuestion(
     const question = await questionsApi.createQuestion(payload, token);
 
     collections.prependQuestion(question);
-    await selectedQuestion.selectQuestion(question.id);
 
     return question;
 }

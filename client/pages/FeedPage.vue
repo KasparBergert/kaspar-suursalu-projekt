@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import FeedComposer from '../features/questions/components/FeedComposer.vue';
 import QuestionList from '../features/questions/components/QuestionList.vue';
-import AppSidebar from '../shared/components/AppSidebar.vue';
 import AppTopbar from '../shared/components/AppTopbar.vue';
 import NoticeStack from '../shared/components/NoticeStack.vue';
 import { useInfiniteFeed } from '../features/questions/composables/useInfiniteFeed.ts';
@@ -32,9 +31,7 @@ useInfiniteFeed(
 <template>
     <AppTopbar />
 
-    <main class="layout">
-        <AppSidebar />
-
+    <main class="layout feed-layout">
         <section class="content">
             <NoticeStack
                 :error-message="notice.errorMessage.value"

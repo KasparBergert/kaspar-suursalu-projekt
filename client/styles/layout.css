@@ -104,6 +104,12 @@
     margin: 0 auto;
 }
 
+.feed-layout {
+    grid-template-columns: minmax(0, 640px);
+    justify-content: center;
+    width: min(640px, calc(100% - 24px));
+}
+
 .sidebar {
     position: sticky;
     top: 64px;

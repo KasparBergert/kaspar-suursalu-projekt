@@ -8,6 +8,10 @@
         grid-template-columns: minmax(170px, 210px) minmax(0, 1fr);
         padding: 0 12px;
     }
+
+    .feed-layout {
+        grid-template-columns: minmax(0, 640px);
+    }
 }
 
 @media (max-width: 760px) {
@@ -74,19 +78,6 @@
 
     .topbar-primary {
         padding: 0 14px;
-    }
-
-    .composer-actions {
-        grid-template-columns: 1fr;
-    }
-
-    .composer-action {
-        border-right: 0;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .composer-action:last-child {
-        border-bottom: 0;
     }
 
     .answer-form {
