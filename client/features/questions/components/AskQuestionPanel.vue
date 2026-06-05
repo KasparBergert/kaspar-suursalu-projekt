@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
 import { ref } from 'vue';
 import type { CreateQuestionPayload } from '../../../types.ts';
 
@@ -46,10 +45,6 @@ function updateImage(event: Event): void {
 <template>
     <div class="ask-panel">
         <div class="ask-panel-body">
-            <button class="ask-panel-close" type="button" aria-label="Close dialog" @click="emit('close')">
-                <X class="action-icon" :stroke-width="2.1" />
-            </button>
-
             <form class="ask-panel-form" @submit.prevent="submit">
                 <input
                     v-model="title"
