@@ -30,6 +30,7 @@ describe('UserController', () => {
         description: 'I want to understand the flow.',
         createdAt: new Date('2026-05-06T12:00:00.000Z'),
         upvotes: 3,
+        likedByUser: false,
         commentCount: 2,
         user: {
             id: 'user-1',

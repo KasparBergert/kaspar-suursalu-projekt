@@ -21,3 +21,22 @@ export function getBearerToken(req: Request): string | undefined {
 
     return header.slice('Bearer '.length);
 }
+
+export function getCookieValue(req: Request, cookieName: string): string | undefined {
+    const header = req.header('cookie');
+
+    if (!header) {
+        return undefined;
+    }
+
+    for (const cookie of header.split(';')) {
+        const [name, ...valueParts] = cookie.trim().split('=');
+
+        if (name === cookieName) {
+            const value = valueParts.join('=');
+            return value ? decodeURIComponent(value) : '';
+        }
+    }
+
+    return undefined;
+}

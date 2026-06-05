@@ -30,6 +30,7 @@ describe('QuestionsController', () => {
         description: 'I want to understand the flow.',
         createdAt: new Date('2026-05-06T12:00:00.000Z'),
         upvotes: 3,
+        likedByUser: false,
         commentCount: 2,
         user: {
             id: 'user-1',
@@ -41,6 +42,8 @@ describe('QuestionsController', () => {
         id: 'answer-1',
         text: 'This is the answer.',
         createdAt: new Date('2026-05-06T12:00:00.000Z'),
+        upvotes: 0,
+        likedByUser: false,
         user: {
             id: 'user-1',
             name: 'Kaspar',
@@ -49,7 +52,7 @@ describe('QuestionsController', () => {
 
     let questionsService: Pick<
         QuestionsService,
-        'createQuestion' | 'getQuestions' | 'getQuestion' | 'addAnswerToQuestion' | 'upVoteQuestion'
+        'createQuestion' | 'getQuestions' | 'getQuestion' | 'addAnswerToQuestion' | 'upVoteQuestion' | 'upVoteComment'
     >;
 
     beforeEach(() => {
@@ -59,6 +62,7 @@ describe('QuestionsController', () => {
             getQuestion: vi.fn(),
             addAnswerToQuestion: vi.fn(),
             upVoteQuestion: vi.fn(),
+            upVoteComment: vi.fn(),
         };
     });
 
@@ -113,7 +117,7 @@ describe('QuestionsController', () => {
 
         await new QuestionsController(questionsService as QuestionsService).getQuestions(req, res);
 
-        expect(questionsService.getQuestions).toHaveBeenCalledWith({ page: 2 });
+        expect(questionsService.getQuestions).toHaveBeenCalledWith({ page: 2, userId: undefined });
         expect(res.json).toHaveBeenCalledWith(result);
     });
 
@@ -145,6 +149,7 @@ describe('QuestionsController', () => {
         expect(questionsService.getQuestion).toHaveBeenCalledWith('question-1', {
             page: 1,
             limit: 10,
+            userId: undefined,
         });
         expect(res.json).toHaveBeenCalledWith(result);
     });
@@ -216,33 +221,80 @@ describe('QuestionsController', () => {
             params: {
                 id: 'question-1',
             },
+            body: {
+                active: true,
+            },
         } as unknown as Request;
         const res = createResponse(user);
 
         await new QuestionsController(questionsService as QuestionsService).upVoteQuestion(req, res);
 
-        expect(questionsService.upVoteQuestion).toHaveBeenCalledWith('user-1', 'question-1');
+        expect(questionsService.upVoteQuestion).toHaveBeenCalledWith({
+            userId: 'user-1',
+            questionId: 'question-1',
+            active: true,
+        });
         expect(res.json).toHaveBeenCalledWith({
             ...question,
             upvotes: 4,
         });
     });
 
-    it('passes duplicate upvote errors to error middleware', async () => {
-        const error = new Error('Question has already been upvoted by this user.');
-        vi.mocked(questionsService.upVoteQuestion).mockRejectedValue(error);
+    it('can remove an upvote for the authenticated user', async () => {
+        vi.mocked(questionsService.upVoteQuestion).mockResolvedValue({
+            ...question,
+            upvotes: 2,
+        });
         const req = {
             params: {
                 id: 'question-1',
             },
+            body: {
+                active: false,
+            },
         } as unknown as Request;
         const res = createResponse(user);
-        const next = vi.fn() as NextFunction;
 
-        await new QuestionsController(questionsService as QuestionsService).upVoteQuestion(req, res, next);
+        await new QuestionsController(questionsService as QuestionsService).upVoteQuestion(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(next).toHaveBeenCalledWith(error);
-        expect(res.json).not.toHaveBeenCalled();
+        expect(questionsService.upVoteQuestion).toHaveBeenCalledWith({
+            userId: 'user-1',
+            questionId: 'question-1',
+            active: false,
+        });
+        expect(res.json).toHaveBeenCalledWith({
+            ...question,
+            upvotes: 2,
+        });
+    });
+
+    it('upvotes a comment for the authenticated user', async () => {
+        vi.mocked(questionsService.upVoteComment).mockResolvedValue({
+            ...answer,
+            upvotes: 1,
+            likedByUser: true,
+        });
+        const req = {
+            params: {
+                id: 'answer-1',
+            },
+            body: {
+                active: true,
+            },
+        } as unknown as Request;
+        const res = createResponse(user);
+
+        await new QuestionsController(questionsService as QuestionsService).upVoteComment(req, res);
+
+        expect(questionsService.upVoteComment).toHaveBeenCalledWith({
+            userId: 'user-1',
+            commentId: 'answer-1',
+            active: true,
+        });
+        expect(res.json).toHaveBeenCalledWith({
+            ...answer,
+            upvotes: 1,
+            likedByUser: true,
+        });
     });
 });

@@ -48,6 +48,6 @@ export class JwtTokenService implements TokenService {
     }
 
     private encodeSecret(): Uint8Array {
-        return new TextEncoder().encode(this.secret);
+        return Buffer.from(this.secret);
     }
 }

@@ -1,22 +1,18 @@
 import { computed, ref } from 'vue';
 import {
     clearStoredSession,
-    readStoredToken,
     readStoredUser,
-    storeSession,
     storeUser,
 } from '../services/sessionStorage.ts';
 import type { AuthUser } from '../../../types.ts';
 
 export function useSession() {
-    const token = ref(readStoredToken());
     const user = ref<AuthUser | null>(readStoredUser());
-    const isAuthenticated = computed(() => Boolean(token.value && user.value));
+    const isAuthenticated = computed(() => Boolean(user.value));
 
-    function setSession(nextToken: string, nextUser: AuthUser): void {
-        token.value = nextToken;
+    function setSession(nextUser: AuthUser): void {
         user.value = nextUser;
-        storeSession(nextToken, nextUser);
+        storeUser(nextUser);
     }
 
     function updateUser(nextUser: AuthUser): void {
@@ -25,7 +21,6 @@ export function useSession() {
     }
 
     function clearSession(): void {
-        token.value = '';
         user.value = null;
         clearStoredSession();
     }
@@ -34,7 +29,6 @@ export function useSession() {
         clearSession,
         isAuthenticated,
         setSession,
-        token,
         updateUser,
         user,
     };

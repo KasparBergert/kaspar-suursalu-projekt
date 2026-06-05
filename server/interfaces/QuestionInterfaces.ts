@@ -23,6 +23,7 @@ export interface QuestionData {
     imageSrc?: string;
     createdAt: Date;
     upvotes: number;
+    likedByUser: boolean;
     commentCount: number;
     user: QuestionUserData;
 }
@@ -31,6 +32,8 @@ export interface CommentData {
     id: string;
     text: string;
     createdAt: Date;
+    upvotes: number;
+    likedByUser: boolean;
     user: QuestionUserData;
 }
 
@@ -50,4 +53,16 @@ export interface AddAnswerData {
     userId: string;
     questionId: string;
     text: string;
+}
+
+export interface ToggleQuestionUpvoteData {
+    userId: string;
+    questionId: string;
+    active: boolean;
+}
+
+export interface ToggleCommentUpvoteData {
+    userId: string;
+    commentId: string;
+    active: boolean;
 }

@@ -8,11 +8,10 @@ type SelectedQuestion = ReturnType<typeof useSelectedQuestion>;
 
 export async function createQuestion(
     payload: CreateQuestionPayload,
-    token: string,
     collections: QuestionCollections,
     selectedQuestion: SelectedQuestion,
 ): Promise<QuestionData> {
-    const question = await questionsApi.createQuestion(payload, token);
+    const question = await questionsApi.createQuestion(payload);
 
     collections.prependQuestion(question);
 
@@ -21,22 +20,23 @@ export async function createQuestion(
 
 export async function upvoteQuestion(
     questionId: string,
-    token: string,
+    active: boolean,
     collections: QuestionCollections,
     selectedQuestion: SelectedQuestion,
-): Promise<void> {
-    const updatedQuestion = await questionsApi.upvoteQuestion(questionId, token);
+): Promise<QuestionData> {
+    const updatedQuestion = await questionsApi.upvoteQuestion(questionId, active);
 
     collections.replaceQuestion(updatedQuestion);
     selectedQuestion.updateSelectedQuestion(updatedQuestion);
+
+    return updatedQuestion;
 }
 
 export async function addAnswer(
     questionId: string,
     text: string,
-    token: string,
     selectedQuestion: SelectedQuestion,
 ): Promise<void> {
-    await questionsApi.addAnswer(questionId, text, token);
+    await questionsApi.addAnswer(questionId, text);
     await selectedQuestion.selectQuestion(questionId);
 }

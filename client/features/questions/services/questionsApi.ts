@@ -28,36 +28,39 @@ export function getQuestion(
     );
 }
 
-export function getMyQuestions(token: string): Promise<{ data: QuestionData[] }> {
-    return apiRequest<{ data: QuestionData[] }>('/profile/questions', { token });
+export function getMyQuestions(): Promise<{ data: QuestionData[] }> {
+    return apiRequest<{ data: QuestionData[] }>('/profile/questions');
 }
 
 export function createQuestion(
     data: CreateQuestionPayload,
-    token: string,
 ): Promise<QuestionData> {
     return apiRequest<QuestionData>('/questions', {
         method: 'POST',
         body: JSON.stringify(data),
-        token,
     });
 }
 
-export function upvoteQuestion(questionId: string, token: string): Promise<QuestionData> {
+export function upvoteQuestion(questionId: string, active: boolean): Promise<QuestionData> {
     return apiRequest<QuestionData>(`/questions/${questionId}/upvotes`, {
         method: 'POST',
-        token,
+        body: JSON.stringify({ active }),
+    });
+}
+
+export function upvoteComment(commentId: string, active: boolean): Promise<CommentData> {
+    return apiRequest<CommentData>(`/comments/${commentId}/upvotes`, {
+        method: 'POST',
+        body: JSON.stringify({ active }),
     });
 }
 
 export function addAnswer(
     questionId: string,
     text: string,
-    token: string,
 ): Promise<CommentData> {
     return apiRequest<CommentData>(`/questions/${questionId}/answers`, {
         method: 'POST',
         body: JSON.stringify({ text }),
-        token,
     });
 }

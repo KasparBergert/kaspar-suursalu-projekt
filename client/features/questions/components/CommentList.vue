@@ -11,7 +11,6 @@ defineProps<{
     <div class="answers">
         <div class="comments-header">
             <h3>Comments</h3>
-            <span>Recommended</span>
         </div>
         <CommentItem
             v-for="comment in comments"

@@ -13,12 +13,11 @@ type Notice = ReturnType<typeof useNotice>;
 
 export function useQuestions(
     isAuthenticated: Readonly<Ref<boolean>>,
-    token: Readonly<Ref<string>>,
     notice: Notice,
 ) {
     const isLoading = ref(false);
     const isSubmitting = ref(false);
-    const collections = useQuestionCollections(isAuthenticated, token);
+    const collections = useQuestionCollections(isAuthenticated);
     const selectedQuestion = useSelectedQuestion();
 
     function loadFeed(nextPage?: number, search?: string): Promise<void | undefined> {
@@ -59,7 +58,7 @@ export function useQuestions(
 
     async function createQuestion(payload: CreateQuestionPayload): Promise<boolean> {
         const question = await runQuestionTask(isSubmitting, notice, () => (
-            createQuestionCommand(payload, token.value, collections, selectedQuestion)
+            createQuestionCommand(payload, collections, selectedQuestion)
         ));
 
         if (question) {
@@ -69,18 +68,19 @@ export function useQuestions(
         return Boolean(question);
     }
 
-    async function upvote(question: QuestionData): Promise<void> {
+    async function upvote(question: QuestionData, active: boolean): Promise<QuestionData | null> {
         if (!isAuthenticated.value) {
             notice.showErrorMessage('Log in to upvote questions.');
-            return;
+            return null;
         }
 
         notice.clearNotice();
 
         try {
-            await upvoteQuestion(question.id, token.value, collections, selectedQuestion);
+            return await upvoteQuestion(question.id, active, collections, selectedQuestion);
         } catch (error) {
             notice.showError(error);
+            return null;
         }
     }
 
@@ -92,7 +92,7 @@ export function useQuestions(
         }
 
         await runQuestionTask(isSubmitting, notice, async () => {
-            await addQuestionAnswer(questionId, text, token.value, selectedQuestion);
+            await addQuestionAnswer(questionId, text, selectedQuestion);
             notice.showMessage('Answer added.');
         });
     }

@@ -14,6 +14,7 @@ export function createApp(): express.Express {
 
     app.use(cors({
         origin: allowedOrigins,
+        credentials: true,
     }));
     app.use(express.json());
     app.use('/api', routes);

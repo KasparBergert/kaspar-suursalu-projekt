@@ -13,7 +13,7 @@ export function useAuth(session: Session, notice: Notice) {
 
     async function loadProfile(): Promise<void> {
         try {
-            const result = await authApi.getProfile(session.token.value);
+            const result = await authApi.getProfile();
             session.updateUser(result.user);
         } catch {
             session.clearSession();
@@ -29,7 +29,7 @@ export function useAuth(session: Session, notice: Notice) {
                 ? await authApi.login(payload)
                 : await authApi.register(payload as RegisterPayload);
 
-            session.setSession(result.token, result.user);
+            session.setSession(result.user);
             notice.showMessage(`Welcome, ${result.user.name}.`);
             return true;
         } catch (error) {
@@ -41,16 +41,11 @@ export function useAuth(session: Session, notice: Notice) {
     }
 
     async function logout(): Promise<void> {
-        if (!session.token.value) {
-            session.clearSession();
-            return;
-        }
-
         isSubmitting.value = true;
         notice.clearNotice();
 
         try {
-            await authApi.logout(session.token.value);
+            await authApi.logout();
             notice.showMessage('Logged out.');
         } catch (error) {
             notice.showError(error);

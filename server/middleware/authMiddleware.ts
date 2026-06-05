@@ -1,10 +1,13 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { TokenService } from '../interfaces/UserInterfaces.ts';
-import { getBearerToken } from '../utils/parseRequest.ts';
+import prisma from '../prisma/main.ts';
+import { getBearerToken, getCookieValue } from '../utils/parseRequest.ts';
+
+const authCookieName = 'auth_token';
 
 export function createAuthMiddleware(tokenService: TokenService) {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const token = getBearerToken(req);
+        const token = getCookieValue(req, authCookieName) ?? getBearerToken(req);
 
         if (!token) {
             res.status(401).json({ error: 'Authentication token is required.' });
@@ -12,7 +15,22 @@ export function createAuthMiddleware(tokenService: TokenService) {
         }
 
         try {
-            res.locals.user = await tokenService.validate(token);
+            const user = await tokenService.validate(token);
+            const storedUser = await prisma.users.findUnique({
+                where: {
+                    id: user.id,
+                },
+                select: {
+                    id: true,
+                },
+            });
+
+            if (!storedUser) {
+                res.status(401).json({ error: 'Authentication token is invalid.' });
+                return;
+            }
+
+            res.locals.user = user;
             next();
         } catch {
             res.status(401).json({ error: 'Authentication token is invalid.' });

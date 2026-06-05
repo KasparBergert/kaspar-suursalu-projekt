@@ -4,6 +4,9 @@ const prisma = vi.hoisted(() => ({
     questions: {
         findMany: vi.fn(),
     },
+    questionUpvotes: {
+        findMany: vi.fn(),
+    },
 }));
 
 vi.mock('../../server/prisma/main.ts', () => ({
@@ -37,6 +40,9 @@ describe('UserService', () => {
 
     it('returns the questions that belong to a user', async () => {
         prisma.questions.findMany.mockResolvedValue([question]);
+        prisma.questionUpvotes.findMany.mockResolvedValue([{
+            questionId: 'question-1',
+        }]);
 
         const result = await new UserService().getQuestions('user-1');
 
@@ -47,6 +53,7 @@ describe('UserService', () => {
                 description: 'I want a practical answer.',
                 createdAt: new Date('2026-05-06T12:00:00.000Z'),
                 upvotes: 5,
+                likedByUser: true,
                 commentCount: 1,
                 user,
             },

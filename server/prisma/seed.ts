@@ -89,6 +89,7 @@ async function readSeedImage(questionKey: string): Promise<Uint8Array<ArrayBuffe
 
 async function clearDatabase(): Promise<void> {
     await prisma.pendingPasswordReset.deleteMany({});
+    await prisma.commentUpvotes.deleteMany({});
     await prisma.questionUpvotes.deleteMany({});
     await prisma.comments.deleteMany({});
     await prisma.questions.deleteMany({});

@@ -18,7 +18,7 @@ const requireAuth = createAuthMiddleware(tokenService);
 const authController = new AuthController(
     new AuthService(new BunPasswordHasher(), tokenService, new ConsoleEmailService()),
 );
-const questionsController = new QuestionsController(new QuestionsService());
+const questionsController = new QuestionsController(new QuestionsService(), tokenService);
 const userController = new UserController(new UserService());
 
 router.post('/auth/register', authController.register);
@@ -36,5 +36,6 @@ router.post('/questions', requireAuth, questionsController.createQuestion);
 router.get('/questions/:id', questionsController.getQuestion);
 router.post('/questions/:id/upvotes', requireAuth, questionsController.upVoteQuestion);
 router.post('/questions/:id/answers', requireAuth, questionsController.addAnswer);
+router.post('/comments/:id/upvotes', requireAuth, questionsController.upVoteComment);
 
 export default router;

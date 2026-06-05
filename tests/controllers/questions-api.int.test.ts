@@ -9,6 +9,7 @@ let server: Server;
 let baseUrl: string;
 
 async function clearDatabase(): Promise<void> {
+    await prisma.commentUpvotes.deleteMany({});
     await prisma.questionUpvotes.deleteMany({});
     await prisma.pendingPasswordReset.deleteMany({});
     await prisma.comments.deleteMany({});
@@ -52,6 +53,45 @@ describe('Questions API integration', () => {
 
     afterAll(async () => {
         await prisma.$disconnect();
+    });
+
+    it('registers and creates a question end to end', async () => {
+        const registerResponse = await fetch(`${baseUrl}/api/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: 'E2E User',
+                email: `e2e-${crypto.randomUUID()}@example.com`,
+                password: 'password123',
+            }),
+        });
+        const cookie = registerResponse.headers.get('set-cookie')?.split(';')[0] ?? '';
+        const createResponse = await fetch(`${baseUrl}/api/questions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Cookie: cookie,
+            },
+            body: JSON.stringify({
+                title: 'Tiny e2e question',
+                description: 'Created through the API.',
+            }),
+        });
+        const createdQuestion = await createResponse.json();
+
+        expect(registerResponse.status).toBe(201);
+        expect(createResponse.status).toBe(201);
+        const storedQuestion = await prisma.questions.findUnique({
+            where: {
+                id: createdQuestion.id,
+            },
+        });
+
+        expect(storedQuestion).toMatchObject({
+            title: 'Tiny e2e question',
+        });
     });
 
     it('lets the frontend load questions from the database', async () => {
@@ -105,6 +145,156 @@ describe('Questions API integration', () => {
             limit: 10,
             total: 1,
             totalPages: 1,
+        });
+    });
+
+    it('marks questions as liked for the signed-in user', async () => {
+        const user = await prisma.users.create({
+            data: {
+                name: 'Liked User',
+                email: `liked-${crypto.randomUUID()}@example.com`,
+                password: 'hashed-password',
+            },
+        });
+        const token = await new JwtTokenService(process.env.JWT_SECRET ?? 'development-secret').create({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        });
+        const question = await prisma.questions.create({
+            data: {
+                userId: user.id,
+                title: 'Does the API tell me I already liked this?',
+                description: 'The feed should include the current user like state.',
+                upvotes: 1,
+            },
+        });
+        await prisma.questionUpvotes.create({
+            data: {
+                userId: user.id,
+                questionId: question.id,
+            },
+        });
+
+        const response = await fetch(`${baseUrl}/api/questions`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data[0]).toMatchObject({
+            id: question.id,
+            likedByUser: true,
+        });
+    });
+
+    it('marks questions as liked when auth comes from the login cookie', async () => {
+        const user = await prisma.users.create({
+            data: {
+                name: 'Cookie User',
+                email: `cookie-liked-${crypto.randomUUID()}@example.com`,
+                password: 'hashed-password',
+            },
+        });
+        const token = await new JwtTokenService(process.env.JWT_SECRET ?? 'development-secret').create({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        });
+        const question = await prisma.questions.create({
+            data: {
+                userId: user.id,
+                title: 'Can cookie auth mark my liked questions?',
+                description: 'The browser sends this after refresh.',
+                upvotes: 1,
+            },
+        });
+        await prisma.questionUpvotes.create({
+            data: {
+                userId: user.id,
+                questionId: question.id,
+            },
+        });
+
+        const response = await fetch(`${baseUrl}/api/questions`, {
+            headers: {
+                Cookie: `auth_token=${encodeURIComponent(token)}`,
+            },
+        });
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data[0]).toMatchObject({
+            id: question.id,
+            likedByUser: true,
+        });
+    });
+
+    it('upvotes a comment for the signed-in user', async () => {
+        const user = await prisma.users.create({
+            data: {
+                name: 'Comment Voter',
+                email: `comment-voter-${crypto.randomUUID()}@example.com`,
+                password: 'hashed-password',
+            },
+        });
+        const token = await new JwtTokenService(process.env.JWT_SECRET ?? 'development-secret').create({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        });
+        const question = await prisma.questions.create({
+            data: {
+                userId: user.id,
+                title: 'Can comments be upvoted?',
+                description: 'Comment votes should persist.',
+            },
+        });
+        const comment = await prisma.comments.create({
+            data: {
+                userId: user.id,
+                questionId: question.id,
+                text: 'Yes, comments can be upvoted.',
+            },
+        });
+
+        const response = await fetch(`${baseUrl}/api/comments/${comment.id}/upvotes`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                active: true,
+            }),
+        });
+        const body = await response.json();
+        const storedComment = await prisma.comments.findUnique({
+            where: {
+                id: comment.id,
+            },
+        });
+        const storedUpvote = await prisma.commentUpvotes.findUnique({
+            where: {
+                userId_commentId: {
+                    userId: user.id,
+                    commentId: comment.id,
+                },
+            },
+        });
+
+        expect(response.status).toBe(200);
+        expect(body).toMatchObject({
+            id: comment.id,
+            upvotes: 1,
+            likedByUser: true,
+        });
+        expect(storedComment?.upvotes).toBe(1);
+        expect(storedUpvote).toMatchObject({
+            userId: user.id,
+            commentId: comment.id,
         });
     });
 

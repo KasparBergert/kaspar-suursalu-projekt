@@ -129,7 +129,6 @@
     font-size: 14px;
 }
 
-.downvote-icon,
 .card-menu,
 .dismiss-x {
     display: inline-grid;
@@ -285,6 +284,19 @@
 
 .answer-body p {
     margin: 6px 0 0;
+}
+
+.comment-vote-button {
+    min-height: 28px;
+    margin-top: 14px;
+    padding: 4px 8px;
+    gap: 5px;
+    font-size: 12px;
+}
+
+.comment-vote-button .action-icon {
+    width: 14px;
+    height: 14px;
 }
 
 .comment-avatar {

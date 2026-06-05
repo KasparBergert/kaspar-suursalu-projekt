@@ -12,11 +12,21 @@ const prisma = vi.hoisted(() => ({
     comments: {
         create: vi.fn(),
         findMany: vi.fn(),
+        findUnique: vi.fn(),
         count: vi.fn(),
+        update: vi.fn(),
     },
     questionUpvotes: {
-        create: vi.fn(),
+        createMany: vi.fn(),
+        deleteMany: vi.fn(),
         findUnique: vi.fn(),
+        findMany: vi.fn(),
+    },
+    commentUpvotes: {
+        createMany: vi.fn(),
+        deleteMany: vi.fn(),
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
     },
 }));
 
@@ -42,6 +52,7 @@ const question = {
     _count: {
         comments: 2,
     },
+    likedByUser: false,
 };
 
 const comment = {
@@ -50,6 +61,8 @@ const comment = {
     userId: 'user-1',
     text: 'This is the answer.',
     createdAt: new Date('2026-05-06T12:00:00.000Z'),
+    upvotes: 0,
+    likedByUser: false,
     user,
 };
 
@@ -74,6 +87,7 @@ describe('QuestionsService', () => {
             description: 'I want to understand the flow.',
             createdAt: new Date('2026-05-06T12:00:00.000Z'),
             upvotes: 3,
+            likedByUser: false,
             commentCount: 2,
             user,
         });
@@ -94,6 +108,7 @@ describe('QuestionsService', () => {
     it('returns paginated questions for the feed', async () => {
         prisma.questions.findMany.mockResolvedValue([question]);
         prisma.questions.count.mockResolvedValue(1);
+        prisma.questionUpvotes.findMany.mockResolvedValue([]);
 
         const result = await new QuestionsService().getQuestions({
             page: 1,
@@ -104,7 +119,7 @@ describe('QuestionsService', () => {
             take: 10,
         }));
         expect(result).toMatchObject({
-            data: [{ id: 'question-1', commentCount: 2 }],
+            data: [{ id: 'question-1', commentCount: 2, likedByUser: false }],
             page: 1,
             limit: 10,
             total: 1,
@@ -115,6 +130,7 @@ describe('QuestionsService', () => {
         prisma.questions.findUnique.mockResolvedValue(question);
         prisma.comments.findMany.mockResolvedValue([comment]);
         prisma.comments.count.mockResolvedValue(1);
+        prisma.commentUpvotes.findMany.mockResolvedValue([]);
 
         const result = await new QuestionsService().getQuestion('question-1', {
             page: 1,
@@ -122,8 +138,44 @@ describe('QuestionsService', () => {
         });
 
         expect(result).toMatchObject({
-            question: { id: 'question-1', commentCount: 2 },
-            comments: { data: [{ id: 'comment-1' }], total: 1 },
+            question: { id: 'question-1', commentCount: 2, likedByUser: false },
+            comments: { data: [{ id: 'comment-1', upvotes: 0, likedByUser: false }], total: 1 },
+        });
+    });
+
+    it('upvotes a comment for a user', async () => {
+        prisma.comments.findUnique.mockResolvedValue(comment);
+        prisma.commentUpvotes.findUnique.mockResolvedValue(null);
+        prisma.commentUpvotes.createMany.mockResolvedValue({ count: 1 });
+        prisma.comments.update.mockResolvedValue({
+            ...comment,
+            upvotes: 1,
+        });
+
+        const result = await new QuestionsService().upVoteComment({
+            userId: 'user-1',
+            commentId: 'comment-1',
+            active: true,
+        });
+
+        expect(prisma.commentUpvotes.createMany).toHaveBeenCalledWith({
+            data: [{
+                userId: 'user-1',
+                commentId: 'comment-1',
+            }],
+            skipDuplicates: true,
+        });
+        expect(prisma.comments.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: {
+                upvotes: {
+                    increment: 1,
+                },
+            },
+        }));
+        expect(result).toMatchObject({
+            id: 'comment-1',
+            upvotes: 1,
+            likedByUser: true,
         });
     });
 
@@ -138,14 +190,26 @@ describe('QuestionsService', () => {
         })).rejects.toThrow('Question was not found.');
     });
 
-    it('upvotes a question once for a user', async () => {
+    it('upvotes a question for a user', async () => {
+        prisma.questions.findUnique.mockResolvedValue(question);
         prisma.questionUpvotes.findUnique.mockResolvedValue(null);
+        prisma.questionUpvotes.createMany.mockResolvedValue({ count: 1 });
         prisma.questions.update.mockResolvedValue({
-            ...question,
+            id: question.id,
+            userId: question.userId,
+            title: question.title,
+            description: question.description,
+            createdAt: question.createdAt,
             upvotes: 4,
+            user,
+            _count: question._count,
         });
 
-        const result = await new QuestionsService().upVoteQuestion('user-1', 'question-1');
+        const result = await new QuestionsService().upVoteQuestion({
+            userId: 'user-1',
+            questionId: 'question-1',
+            active: true,
+        });
 
         expect(prisma.questionUpvotes.findUnique).toHaveBeenCalledWith({
             where: {
@@ -155,11 +219,12 @@ describe('QuestionsService', () => {
                 },
             },
         });
-        expect(prisma.questionUpvotes.create).toHaveBeenCalledWith({
-            data: {
+        expect(prisma.questionUpvotes.createMany).toHaveBeenCalledWith({
+            data: [{
                 userId: 'user-1',
                 questionId: 'question-1',
-            },
+            }],
+            skipDuplicates: true,
         });
         expect(prisma.questions.update).toHaveBeenCalledWith(expect.objectContaining({
             data: {
@@ -169,19 +234,68 @@ describe('QuestionsService', () => {
             },
         }));
         expect(result.upvotes).toBe(4);
+        expect(result.likedByUser).toBe(true);
     });
 
-    it('does not upvote a question twice for the same user', async () => {
+    it('does not increment a question twice for the same user', async () => {
+        prisma.questions.findUnique.mockResolvedValue(question);
         prisma.questionUpvotes.findUnique.mockResolvedValue({
             id: 'upvote-1',
             userId: 'user-1',
             questionId: 'question-1',
         });
 
-        await expect(new QuestionsService().upVoteQuestion('user-1', 'question-1'))
-            .rejects.toThrow('Question has already been upvoted by this user.');
+        const result = await new QuestionsService().upVoteQuestion({
+            userId: 'user-1',
+            questionId: 'question-1',
+            active: true,
+        });
 
+        expect(result.upvotes).toBe(3);
+        expect(result.likedByUser).toBe(true);
         expect(prisma.$transaction).not.toHaveBeenCalled();
         expect(prisma.questions.update).not.toHaveBeenCalled();
+    });
+
+    it('removes a user upvote when deactivated', async () => {
+        prisma.questions.findUnique.mockResolvedValue(question);
+        prisma.questionUpvotes.findUnique.mockResolvedValue({
+            id: 'upvote-1',
+            userId: 'user-1',
+            questionId: 'question-1',
+        });
+        prisma.questionUpvotes.deleteMany.mockResolvedValue({ count: 1 });
+        prisma.questions.update.mockResolvedValue({
+            id: question.id,
+            userId: question.userId,
+            title: question.title,
+            description: question.description,
+            createdAt: question.createdAt,
+            upvotes: 2,
+            user,
+            _count: question._count,
+        });
+
+        const result = await new QuestionsService().upVoteQuestion({
+            userId: 'user-1',
+            questionId: 'question-1',
+            active: false,
+        });
+
+        expect(prisma.questionUpvotes.deleteMany).toHaveBeenCalledWith({
+            where: {
+                userId: 'user-1',
+                questionId: 'question-1',
+            },
+        });
+        expect(prisma.questions.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: {
+                upvotes: {
+                    decrement: 1,
+                },
+            },
+        }));
+        expect(result.upvotes).toBe(2);
+        expect(result.likedByUser).toBe(false);
     });
 });

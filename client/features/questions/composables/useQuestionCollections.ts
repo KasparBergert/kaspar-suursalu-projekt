@@ -4,7 +4,6 @@ import type { QuestionData } from '../../../types.ts';
 
 export function useQuestionCollections(
     isAuthenticated: Readonly<Ref<boolean>>,
-    token: Readonly<Ref<string>>,
 ) {
     const questions = ref<QuestionData[]>([]);
     const myQuestions = ref<QuestionData[]>([]);
@@ -44,7 +43,7 @@ export function useQuestionCollections(
             return;
         }
 
-        const result = await questionsApi.getMyQuestions(token.value);
+        const result = await questionsApi.getMyQuestions();
         myQuestions.value = result.data;
     }
 

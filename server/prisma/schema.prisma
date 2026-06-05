@@ -15,6 +15,7 @@ model Users {
     questions       Questions[]
     comments        Comments[]
     questionUpvotes QuestionUpvotes[]
+    commentUpvotes  CommentUpvotes[]
 }
 
 model Questions {
@@ -31,13 +32,15 @@ model Questions {
 }
 
 model Comments {
-    id         String    @id @default(uuid())
-    questionId String
-    userId     String
-    text       String
-    createdAt  DateTime  @default(now())
-    question   Questions @relation(fields: [questionId], references: [id])
-    user       Users     @relation(fields: [userId], references: [id])
+    id          String           @id @default(uuid())
+    questionId  String
+    userId      String
+    text        String
+    createdAt   DateTime         @default(now())
+    upvotes     Int              @default(0)
+    question    Questions        @relation(fields: [questionId], references: [id])
+    user        Users            @relation(fields: [userId], references: [id])
+    upvotedBy   CommentUpvotes[]
 }
 
 model QuestionUpvotes {
@@ -49,6 +52,17 @@ model QuestionUpvotes {
     question   Questions @relation(fields: [questionId], references: [id])
 
     @@unique([userId, questionId])
+}
+
+model CommentUpvotes {
+    id        String   @id @default(uuid())
+    userId    String
+    commentId String
+    createdAt DateTime @default(now())
+    user      Users    @relation(fields: [userId], references: [id])
+    comment   Comments @relation(fields: [commentId], references: [id])
+
+    @@unique([userId, commentId])
 }
 
 model PendingPasswordReset {

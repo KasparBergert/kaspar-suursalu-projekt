@@ -18,11 +18,8 @@ function createAppStore() {
     const router = useAppRouter();
 
     onMounted(async () => {
+        await auth.loadProfile();
         await questions.loadFeed();
-
-        if (auth.session.token.value) {
-            await auth.loadProfile();
-        }
     });
 
     watch(router.currentRoute, async (nextRoute) => {

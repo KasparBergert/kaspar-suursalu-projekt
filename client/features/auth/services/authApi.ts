@@ -1,6 +1,5 @@
 import type {
     AuthCredentials,
-    AuthResult,
     AuthUser,
     PasswordResetPayload,
     PasswordResetRequestPayload,
@@ -8,29 +7,28 @@ import type {
 } from '../../../types.ts';
 import { apiRequest } from '../../../utils/apiRequest.ts';
 
-export function register(data: RegisterPayload): Promise<AuthResult> {
-    return apiRequest<AuthResult>('/auth/register', {
+export function register(data: RegisterPayload): Promise<{ user: AuthUser }> {
+    return apiRequest<{ user: AuthUser }>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
     });
 }
 
-export function login(data: AuthCredentials): Promise<AuthResult> {
-    return apiRequest<AuthResult>('/auth/login', {
+export function login(data: AuthCredentials): Promise<{ user: AuthUser }> {
+    return apiRequest<{ user: AuthUser }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify(data),
     });
 }
 
-export function logout(token: string): Promise<{ message: string }> {
+export function logout(): Promise<{ message: string }> {
     return apiRequest<{ message: string }>('/auth/logout', {
         method: 'POST',
-        token,
     });
 }
 
-export function getProfile(token: string): Promise<{ user: AuthUser }> {
-    return apiRequest<{ user: AuthUser }>('/profile', { token });
+export function getProfile(): Promise<{ user: AuthUser }> {
+    return apiRequest<{ user: AuthUser }>('/profile');
 }
 
 export function requestPasswordReset(data: PasswordResetRequestPayload): Promise<{ message: string }> {

@@ -7,6 +7,7 @@ function createResponse(): Response {
     const res = {
         status: vi.fn(),
         json: vi.fn(),
+        setHeader: vi.fn(),
         locals: {},
     } as unknown as Response;
 
@@ -57,7 +58,11 @@ describe('AuthController', () => {
 
         expect(authService.register).toHaveBeenCalledWith(req.body);
         expect(res.status).toHaveBeenCalledWith(201);
-        expect(res.json).toHaveBeenCalledWith(authResult);
+        expect(res.setHeader).toHaveBeenCalledWith(
+            'Set-Cookie',
+            'auth_token=jwt-token; HttpOnly; Path=/; SameSite=Lax',
+        );
+        expect(res.json).toHaveBeenCalledWith({ user: authResult.user });
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -89,7 +94,11 @@ describe('AuthController', () => {
         await new AuthController(authService as AuthService).login(req, res, next);
 
         expect(authService.login).toHaveBeenCalledWith(req.body);
-        expect(res.json).toHaveBeenCalledWith(authResult);
+        expect(res.setHeader).toHaveBeenCalledWith(
+            'Set-Cookie',
+            'auth_token=jwt-token; HttpOnly; Path=/; SameSite=Lax',
+        );
+        expect(res.json).toHaveBeenCalledWith({ user: authResult.user });
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -110,7 +119,7 @@ describe('AuthController', () => {
     it('logs out a user', async () => {
         const req = {
             header: vi.fn((name: string) => (
-                name === 'authorization' ? 'Bearer jwt-token' : undefined
+                name === 'cookie' ? 'auth_token=jwt-token' : undefined
             )),
         } as unknown as Request;
         const res = createResponse();
@@ -119,6 +128,10 @@ describe('AuthController', () => {
         await new AuthController(authService as AuthService).logout(req, res, next);
 
         expect(authService.logout).toHaveBeenCalledWith('jwt-token');
+        expect(res.setHeader).toHaveBeenCalledWith(
+            'Set-Cookie',
+            'auth_token=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0',
+        );
         expect(res.json).toHaveBeenCalledWith({ message: 'Logged out.' });
         expect(next).not.toHaveBeenCalled();
     });

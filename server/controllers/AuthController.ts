@@ -1,6 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { AuthService } from '../services/AuthService.ts';
-import { getBearerToken, parseRouteParam } from '../utils/parseRequest.ts';
+import { getBearerToken, getCookieValue, parseRouteParam } from '../utils/parseRequest.ts';
+
+const authCookieName = 'auth_token';
+const authCookieOptions = 'HttpOnly; Path=/; SameSite=Lax';
 
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
@@ -8,7 +11,8 @@ export class AuthController {
     register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const result = await this.authService.register(req.body);
-            res.status(201).json(result);
+            this.setAuthCookie(res, result.token);
+            res.status(201).json({ user: result.user });
         } catch (error) {
             res.status(400);
             next(error);
@@ -18,7 +22,8 @@ export class AuthController {
     login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const result = await this.authService.login(req.body);
-            res.json(result);
+            this.setAuthCookie(res, result.token);
+            res.json({ user: result.user });
         } catch (error) {
             res.status(401);
             next(error);
@@ -26,7 +31,7 @@ export class AuthController {
     };
 
     logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const token = getBearerToken(req);
+        const token = getCookieValue(req, authCookieName) ?? getBearerToken(req);
 
         if (!token) {
             res.status(401).json({ error: 'Authentication token is required.' });
@@ -35,6 +40,7 @@ export class AuthController {
 
         try {
             await this.authService.logout(token);
+            this.clearAuthCookie(res);
             res.json({ message: 'Logged out.' });
         } catch (error) {
             res.status(401);
@@ -85,4 +91,12 @@ export class AuthController {
             next(error);
         }
     };
+
+    private setAuthCookie(res: Response, token: string): void {
+        res.setHeader('Set-Cookie', `${authCookieName}=${encodeURIComponent(token)}; ${authCookieOptions}`);
+    }
+
+    private clearAuthCookie(res: Response): void {
+        res.setHeader('Set-Cookie', `${authCookieName}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`);
+    }
 }

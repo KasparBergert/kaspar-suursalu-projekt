@@ -1,8 +1,6 @@
 const apiBaseUrl = 'http://localhost:3000/api';
 
-type ApiRequestOptions = RequestInit & {
-    token?: string;
-};
+type ApiRequestOptions = RequestInit;
 
 export async function apiRequest<TData>(
     path: string,
@@ -11,13 +9,10 @@ export async function apiRequest<TData>(
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
 
-    if (options.token) {
-        headers.set('Authorization', `Bearer ${options.token}`);
-    }
-
     const response = await fetch(`${apiBaseUrl}${path}`, {
         ...options,
         headers,
+        credentials: 'include',
     });
     const text = await response.text();
     const data = text ? JSON.parse(text) : null;

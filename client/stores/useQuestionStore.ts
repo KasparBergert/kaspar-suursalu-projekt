@@ -19,7 +19,7 @@ function createQuestionStore() {
     const notice = useNotice();
     const modal = useModal();
     const router = useAppRouter();
-    const questions = useQuestions(auth.session.isAuthenticated, auth.session.token, notice);
+    const questions = useQuestions(auth.session.isAuthenticated, notice);
     const isSubmitting = computed(() => auth.isSubmitting.value || questions.isSubmitting.value);
 
     const feedModel = computed<QuestionListModel>(() => ({
@@ -86,13 +86,13 @@ function createQuestionStore() {
         await questions.addAnswer(text);
     }
 
-    async function upvoteQuestion(question: QuestionData): Promise<void> {
+    async function upvoteQuestion(question: QuestionData, active: boolean): Promise<QuestionData | null> {
         if (!auth.session.isAuthenticated.value) {
             auth.openLoginPage();
-            return;
+            return null;
         }
 
-        await questions.upvote(question);
+        return questions.upvote(question, active);
     }
 
     return {

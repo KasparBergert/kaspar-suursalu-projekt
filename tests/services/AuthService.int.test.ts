@@ -72,6 +72,7 @@ function createEmail(): string {
 
 describe('AuthService integration', () => {
     afterEach(async () => {
+    await prisma.commentUpvotes.deleteMany({});
     await prisma.questionUpvotes.deleteMany({});
     await prisma.pendingPasswordReset.deleteMany({});
         await prisma.comments.deleteMany({});

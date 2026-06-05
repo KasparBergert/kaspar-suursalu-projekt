@@ -16,11 +16,6 @@ export type AuthUser = {
     email: string;
 };
 
-export type AuthResult = {
-    user: AuthUser;
-    token: string;
-};
-
 export type QuestionUserData = {
     id: string;
     name: string;
@@ -33,6 +28,7 @@ export type QuestionData = {
     imageSrc?: string;
     createdAt: string;
     upvotes: number;
+    likedByUser: boolean;
     commentCount: number;
     user: QuestionUserData;
 };
@@ -41,6 +37,8 @@ export type CommentData = {
     id: string;
     text: string;
     createdAt: string;
+    upvotes: number;
+    likedByUser: boolean;
     user: QuestionUserData;
 };
 
