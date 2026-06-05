@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
 import AuthNotice from './AuthNotice.vue';
 import { usePasswordReset } from '../composables/usePasswordReset.ts';
 import { useNotice } from '../../../shared/composables/useNotice.ts';
@@ -8,13 +9,21 @@ import { useAuthStore } from '../../../stores/useAuthStore.ts';
 const auth = useAuthStore();
 const model = auth.authPageModel;
 const passwordReset = usePasswordReset(useNotice());
+const route = useRoute();
 
 const password = ref('');
 const isSubmitting = ref(false);
 
 async function submit(): Promise<void> {
+    const token = typeof route.query.token === 'string' ? route.query.token : '';
+
+    if (!token) {
+        model.errorMessage = 'Password reset link is invalid or expired.';
+        return;
+    }
+
     isSubmitting.value = true;
-    const didReset = await passwordReset.resetPassword(password.value);
+    const didReset = await passwordReset.resetPassword(token, password.value);
     isSubmitting.value = false;
 
     if (didReset) {

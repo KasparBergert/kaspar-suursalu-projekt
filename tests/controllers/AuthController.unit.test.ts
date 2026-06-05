@@ -67,7 +67,7 @@ describe('AuthController', () => {
         expect(next).not.toHaveBeenCalled();
     });
 
-    it('validates a reset link, stores it in a cookie, and redirects to the reset page', async () => {
+    it('validates a reset link and redirects to the reset page with the token', async () => {
         vi.mocked(authService.verifyPasswordResetToken).mockResolvedValue({
             email: 'kaspar@example.com',
         });
@@ -82,11 +82,7 @@ describe('AuthController', () => {
         await new AuthController(authService as AuthService).openPasswordResetLink(req, res, next);
 
         expect(authService.verifyPasswordResetToken).toHaveBeenCalledWith('reset-token');
-        expect(res.setHeader).toHaveBeenCalledWith(
-            'Set-Cookie',
-            'password_reset_token=reset-token; HttpOnly; Path=/api/auth/password-resets; SameSite=Lax; Max-Age=1800',
-        );
-        expect(res.redirect).toHaveBeenCalledWith('http://localhost:5173/password-reset');
+        expect(res.redirect).toHaveBeenCalledWith('http://localhost:5173/password-reset?token=reset-token');
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -193,25 +189,6 @@ describe('AuthController', () => {
         expect(res.json).toHaveBeenCalledWith({
             message: 'If that email exists, a password reset link has been sent.',
         });
-        expect(next).not.toHaveBeenCalled();
-    });
-
-    it('verifies a password reset token from the reset URL', async () => {
-        vi.mocked(authService.verifyPasswordResetToken).mockResolvedValue({
-            email: 'kaspar@example.com',
-        });
-        const req = {
-            params: {
-                token: 'reset-token',
-            },
-        } as unknown as Request;
-        const res = createResponse();
-        const next = vi.fn() as NextFunction;
-
-        await new AuthController(authService as AuthService).verifyPasswordResetToken(req, res, next);
-
-        expect(authService.verifyPasswordResetToken).toHaveBeenCalledWith('reset-token');
-        expect(res.json).toHaveBeenCalledWith({ email: 'kaspar@example.com' });
         expect(next).not.toHaveBeenCalled();
     });
 

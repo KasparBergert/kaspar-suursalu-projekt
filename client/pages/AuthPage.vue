@@ -17,25 +17,17 @@ const router = useRouter();
 
 onMounted(async () => {
     if (route.name === 'password-reset') {
-        auth.openResetPasswordForm();
-        const isValidReset = await passwordReset.verifyCurrentPasswordReset();
+        const resetToken = typeof route.query.token === 'string' ? route.query.token : '';
 
-        if (!isValidReset) {
+        if (!resetToken) {
             auth.showLoginPage();
             await router.replace({ name: 'auth' });
+            return;
         }
 
+        auth.openResetPasswordForm();
         return;
     }
-
-    const resetToken = new URLSearchParams(window.location.search).get('resetToken');
-
-    if (!resetToken) {
-        return;
-    }
-
-    auth.openResetPasswordForm();
-    await passwordReset.verifyPasswordResetToken(resetToken);
 });
 </script>
 

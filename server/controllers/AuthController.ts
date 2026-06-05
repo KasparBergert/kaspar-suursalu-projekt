@@ -4,8 +4,6 @@ import { getBearerToken, getCookieValue, parseRouteParam } from '../utils/parseR
 
 const authCookieName = 'auth_token';
 const authCookieOptions = 'HttpOnly; Path=/; SameSite=Lax';
-const passwordResetCookieName = 'password_reset_token';
-const passwordResetCookieOptions = 'HttpOnly; Path=/api/auth/password-resets; SameSite=Lax; Max-Age=1800';
 
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
@@ -60,23 +58,6 @@ export class AuthController {
         }
     };
 
-    verifyPasswordResetToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const token = parseRouteParam(req.params.token);
-
-        if (!token) {
-            res.status(400).json({ error: 'Password reset token is required.' });
-            return;
-        }
-
-        try {
-            const result = await this.authService.verifyPasswordResetToken(token);
-            res.json(result);
-        } catch (error) {
-            res.status(404);
-            next(error);
-        }
-    };
-
     openPasswordResetLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const token = parseRouteParam(req.params.token);
 
@@ -87,34 +68,15 @@ export class AuthController {
 
         try {
             await this.authService.verifyPasswordResetToken(token);
-            this.setPasswordResetCookie(res, token);
-            res.redirect(this.createFrontendUrl('/password-reset'));
+            res.redirect(this.createFrontendUrl(`/password-reset?token=${encodeURIComponent(token)}`));
         } catch (error) {
-            res.status(404);
-            next(error);
-        }
-    };
-
-    verifyCurrentPasswordReset = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const token = getCookieValue(req, passwordResetCookieName);
-
-        if (!token) {
-            res.status(400).json({ error: 'Password reset link is required.' });
-            return;
-        }
-
-        try {
-            const result = await this.authService.verifyPasswordResetToken(token);
-            res.json(result);
-        } catch (error) {
-            this.clearPasswordResetCookie(res);
             res.status(404);
             next(error);
         }
     };
 
     resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const token = parseRouteParam(req.params.token) ?? getCookieValue(req, passwordResetCookieName);
+        const token = parseRouteParam(req.params.token);
 
         if (!token) {
             res.status(400).json({ error: 'Password reset token is required.' });
@@ -123,7 +85,6 @@ export class AuthController {
 
         try {
             const result = await this.authService.resetPassword(token, req.body);
-            this.clearPasswordResetCookie(res);
             res.json(result);
         } catch (error) {
             res.status(400);
@@ -137,20 +98,6 @@ export class AuthController {
 
     private clearAuthCookie(res: Response): void {
         res.setHeader('Set-Cookie', `${authCookieName}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`);
-    }
-
-    private setPasswordResetCookie(res: Response, token: string): void {
-        res.setHeader(
-            'Set-Cookie',
-            `${passwordResetCookieName}=${encodeURIComponent(token)}; ${passwordResetCookieOptions}`,
-        );
-    }
-
-    private clearPasswordResetCookie(res: Response): void {
-        res.setHeader(
-            'Set-Cookie',
-            `${passwordResetCookieName}=; HttpOnly; Path=/api/auth/password-resets; SameSite=Lax; Max-Age=0`,
-        );
     }
 
     private createFrontendUrl(path: string): string {

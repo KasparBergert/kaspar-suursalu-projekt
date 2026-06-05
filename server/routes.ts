@@ -25,10 +25,7 @@ router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
 router.post('/auth/logout', requireAuth, authController.logout);
 router.post('/auth/password-resets', authController.requestPasswordReset);
-router.get('/auth/password-resets/current', authController.verifyCurrentPasswordReset);
-router.post('/auth/password-resets/current', authController.resetPassword);
 router.get('/auth/password-resets/:token/redirect', authController.openPasswordResetLink);
-router.get('/auth/password-resets/:token', authController.verifyPasswordResetToken);
 router.post('/auth/password-resets/:token', authController.resetPassword);
 
 router.get('/profile', requireAuth, userController.getProfile);

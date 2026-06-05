@@ -17,35 +17,11 @@ export function usePasswordReset(notice: Notice) {
         }
     }
 
-    async function verifyPasswordResetToken(token: string): Promise<boolean> {
+    async function resetPassword(token: string, password: string): Promise<boolean> {
         notice.clearNotice();
 
         try {
-            await authApi.verifyPasswordResetToken(token);
-            return true;
-        } catch (error) {
-            notice.showError(error);
-            return false;
-        }
-    }
-
-    async function verifyCurrentPasswordReset(): Promise<boolean> {
-        notice.clearNotice();
-
-        try {
-            await authApi.verifyCurrentPasswordReset();
-            return true;
-        } catch (error) {
-            notice.showError(error);
-            return false;
-        }
-    }
-
-    async function resetPassword(password: string): Promise<boolean> {
-        notice.clearNotice();
-
-        try {
-            const result = await authApi.resetPassword({ password });
+            const result = await authApi.resetPassword(token, { password });
             notice.showMessage(result.message);
             return true;
         } catch (error) {
@@ -57,7 +33,5 @@ export function usePasswordReset(notice: Notice) {
     return {
         requestPasswordReset,
         resetPassword,
-        verifyCurrentPasswordReset,
-        verifyPasswordResetToken,
     };
 }
