@@ -139,7 +139,7 @@ describe('AuthService integration', () => {
         const resetRequest = await authService.requestPasswordReset({ email });
         expect(emailService.resetLinks[0]).toEqual(expect.any(String));
         const resetUrl = new URL(emailService.resetLinks[0] as string);
-        const token = resetUrl.searchParams.get('resetToken');
+        const token = resetUrl.pathname.split('/').at(-2);
 
         expect(resetRequest).toEqual({
             message: 'If that email exists, a password reset link has been sent.',

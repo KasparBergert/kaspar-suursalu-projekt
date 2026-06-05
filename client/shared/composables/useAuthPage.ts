@@ -4,7 +4,6 @@ import type { AuthPageMode } from '../../types.ts';
 export function useAuthPage() {
     const isVisible = ref(false);
     const mode = ref<AuthPageMode>('login');
-    const passwordResetToken = ref('');
 
     function openLogin(): void {
         mode.value = 'login';
@@ -16,8 +15,7 @@ export function useAuthPage() {
         isVisible.value = true;
     }
 
-    function openResetPassword(resetToken: string): void {
-        passwordResetToken.value = resetToken;
+    function openResetPassword(): void {
         mode.value = 'reset-password';
         isVisible.value = true;
     }
@@ -38,19 +36,13 @@ export function useAuthPage() {
         isVisible.value = false;
     }
 
-    function clearResetToken(): void {
-        passwordResetToken.value = '';
-    }
-
     return {
-        clearResetToken,
         close,
         isVisible,
         mode,
         openLogin,
         openRegister,
         openResetPassword,
-        passwordResetToken,
         showLogin,
         showRegister,
         toggleForgotPassword,

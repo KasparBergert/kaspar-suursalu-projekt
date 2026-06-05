@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import ForgotPasswordForm from '../features/auth/components/ForgotPasswordForm.vue';
 import LoginForm from '../features/auth/components/LoginForm.vue';
 import RegisterForm from '../features/auth/components/RegisterForm.vue';
@@ -11,15 +12,29 @@ import loginPageBackground from '../../server/assets/login-page-backgound.png';
 
 const auth = useAuthStore();
 const passwordReset = usePasswordReset(useNotice());
+const route = useRoute();
+const router = useRouter();
 
 onMounted(async () => {
+    if (route.name === 'password-reset') {
+        auth.openResetPasswordForm();
+        const isValidReset = await passwordReset.verifyCurrentPasswordReset();
+
+        if (!isValidReset) {
+            auth.showLoginPage();
+            await router.replace({ name: 'auth' });
+        }
+
+        return;
+    }
+
     const resetToken = new URLSearchParams(window.location.search).get('resetToken');
 
     if (!resetToken) {
         return;
     }
 
-    auth.openResetPasswordForm(resetToken);
+    auth.openResetPasswordForm();
     await passwordReset.verifyPasswordResetToken(resetToken);
 });
 </script>

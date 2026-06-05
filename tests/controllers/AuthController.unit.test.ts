@@ -7,6 +7,7 @@ function createResponse(): Response {
     const res = {
         status: vi.fn(),
         json: vi.fn(),
+        redirect: vi.fn(),
         setHeader: vi.fn(),
         locals: {},
     } as unknown as Response;
@@ -63,6 +64,29 @@ describe('AuthController', () => {
             'auth_token=jwt-token; HttpOnly; Path=/; SameSite=Lax',
         );
         expect(res.json).toHaveBeenCalledWith({ user: authResult.user });
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    it('validates a reset link, stores it in a cookie, and redirects to the reset page', async () => {
+        vi.mocked(authService.verifyPasswordResetToken).mockResolvedValue({
+            email: 'kaspar@example.com',
+        });
+        const req = {
+            params: {
+                token: 'reset-token',
+            },
+        } as unknown as Request;
+        const res = createResponse();
+        const next = vi.fn() as NextFunction;
+
+        await new AuthController(authService as AuthService).openPasswordResetLink(req, res, next);
+
+        expect(authService.verifyPasswordResetToken).toHaveBeenCalledWith('reset-token');
+        expect(res.setHeader).toHaveBeenCalledWith(
+            'Set-Cookie',
+            'password_reset_token=reset-token; HttpOnly; Path=/api/auth/password-resets; SameSite=Lax; Max-Age=1800',
+        );
+        expect(res.redirect).toHaveBeenCalledWith('http://localhost:5173/password-reset');
         expect(next).not.toHaveBeenCalled();
     });
 

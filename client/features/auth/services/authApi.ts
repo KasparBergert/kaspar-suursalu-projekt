@@ -42,11 +42,14 @@ export function verifyPasswordResetToken(token: string): Promise<{ email: string
     return apiRequest<{ email: string }>(`/auth/password-resets/${encodeURIComponent(token)}`);
 }
 
+export function verifyCurrentPasswordReset(): Promise<{ email: string }> {
+    return apiRequest<{ email: string }>('/auth/password-resets/current');
+}
+
 export function resetPassword(
-    token: string,
     data: PasswordResetPayload,
 ): Promise<{ message: string }> {
-    return apiRequest<{ message: string }>(`/auth/password-resets/${encodeURIComponent(token)}`, {
+    return apiRequest<{ message: string }>('/auth/password-resets/current', {
         method: 'POST',
         body: JSON.stringify(data),
     });

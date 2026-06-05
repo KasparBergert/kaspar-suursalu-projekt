@@ -53,8 +53,8 @@ function createAuthStore() {
         authPage.showRegister();
     }
 
-    function openResetPasswordForm(resetToken: string): void {
-        authPage.openResetPassword(resetToken);
+    function openResetPasswordForm(): void {
+        authPage.openResetPassword();
     }
 
     return {

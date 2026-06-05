@@ -5,7 +5,7 @@ import { UserController } from './controllers/UserController.ts';
 import { createAuthMiddleware } from './middleware/authMiddleware.ts';
 import { AuthService } from './services/AuthService.ts';
 import { BunPasswordHasher } from './services/BunPasswordHasher.ts';
-import { ConsoleEmailService } from './services/ConsoleEmailService.ts';
+import { createEmailService } from './services/createEmailService.ts';
 import { JwtTokenService } from './services/JwtTokenService.ts';
 import { QuestionsService } from './services/QuestionsService.ts';
 import { UserService } from './services/UserService.ts';
@@ -16,7 +16,7 @@ const tokenService = new JwtTokenService(jwtSecret);
 const requireAuth = createAuthMiddleware(tokenService);
 
 const authController = new AuthController(
-    new AuthService(new BunPasswordHasher(), tokenService, new ConsoleEmailService()),
+    new AuthService(new BunPasswordHasher(), tokenService, createEmailService()),
 );
 const questionsController = new QuestionsController(new QuestionsService(), tokenService);
 const userController = new UserController(new UserService());
@@ -25,6 +25,9 @@ router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
 router.post('/auth/logout', requireAuth, authController.logout);
 router.post('/auth/password-resets', authController.requestPasswordReset);
+router.get('/auth/password-resets/current', authController.verifyCurrentPasswordReset);
+router.post('/auth/password-resets/current', authController.resetPassword);
+router.get('/auth/password-resets/:token/redirect', authController.openPasswordResetLink);
 router.get('/auth/password-resets/:token', authController.verifyPasswordResetToken);
 router.post('/auth/password-resets/:token', authController.resetPassword);
 

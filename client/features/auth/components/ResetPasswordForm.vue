@@ -14,13 +14,11 @@ const isSubmitting = ref(false);
 
 async function submit(): Promise<void> {
     isSubmitting.value = true;
-    const didReset = await passwordReset.resetPassword(auth.authPage.passwordResetToken.value, password.value);
+    const didReset = await passwordReset.resetPassword(password.value);
     isSubmitting.value = false;
 
     if (didReset) {
         auth.showLoginPage();
-        auth.authPage.clearResetToken();
-        window.history.replaceState({}, '', window.location.pathname);
     }
 }
 </script>

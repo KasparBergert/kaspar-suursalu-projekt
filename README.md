@@ -23,6 +23,21 @@ bun install
 
 please view the `.env.example` file
 
+Password reset links are sent to local Mailpit by default in development. Make sure Mailpit is running, then use these values in `.env`:
+
+```bash
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_SECURE=false
+MAIL_FROM="Quora Copy <no-reply@localhost>"
+FRONTEND_URL=http://localhost:5173
+BACKEND_URL=http://localhost:3000/api
+```
+
+For a real SMTP provider, also set `SMTP_USER` and `SMTP_PASS`, and use the provider's host, port, and sender address.
+
+`BACKEND_URL` is used to build the link in the email. That backend link validates the token, stores it in a short-lived HttpOnly cookie, then redirects the user to `FRONTEND_URL/password-reset`.
+
 ## 3. Push the Prisma schema to MariaDB
 
 This project uses Prisma, so the database schema needs to be pushed to your local MariaDB database before the app can run.

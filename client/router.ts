@@ -28,6 +28,11 @@ const routes: RouteRecordRaw[] = [
         component: AuthPage,
     },
     {
+        path: '/password-reset',
+        name: 'password-reset',
+        component: AuthPage,
+    },
+    {
         path: '/:pathMatch(.*)*',
         redirect: '/',
     },
