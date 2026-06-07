@@ -1,4 +1,5 @@
 import prisma from '../../prisma/main.ts';
+import type { Prisma } from '../../prisma/generated/client';
 import type {
     CommentData,
     QuestionData,
@@ -209,7 +210,7 @@ export class QuestionVoteService {
     }
 
     private saveQuestionVote(
-        tx: typeof prisma,
+        tx: Prisma.TransactionClient,
         data: SetQuestionVoteData,
         hasExistingVote: boolean,
     ) {
@@ -248,7 +249,7 @@ export class QuestionVoteService {
     }
 
     private saveCommentVote(
-        tx: typeof prisma,
+        tx: Prisma.TransactionClient,
         data: SetCommentVoteData,
         hasExistingVote: boolean,
     ) {
