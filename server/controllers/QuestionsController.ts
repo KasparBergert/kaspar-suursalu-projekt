@@ -97,10 +97,10 @@ export class QuestionsController {
         }
     };
 
-    upVoteQuestion = async (req: Request, res: Response, next?: NextFunction): Promise<void> => {
+    setQuestionVote = async (req: Request, res: Response, next?: NextFunction): Promise<void> => {
         const user = await this.getRequestUser(req, res);
         const questionId = parseRouteParam(req.params.id);
-        const active = parseUpvoteState(req.body?.active ?? req.query.active);
+        const vote = parseVoteState(req.body?.vote ?? req.query.vote);
 
         if (!user) {
             res.status(401).json({ error: 'Authentication is required.' });
@@ -113,10 +113,10 @@ export class QuestionsController {
         }
 
         try {
-            const question = await this.questionsService.upVoteQuestion({
+            const question = await this.questionsService.setQuestionVote({
                 userId: user.id,
                 questionId,
-                active,
+                vote,
             });
             res.json(question);
         } catch (error) {
@@ -125,10 +125,10 @@ export class QuestionsController {
         }
     };
 
-    upVoteComment = async (req: Request, res: Response, next?: NextFunction): Promise<void> => {
+    setCommentVote = async (req: Request, res: Response, next?: NextFunction): Promise<void> => {
         const user = await this.getRequestUser(req, res);
         const commentId = parseRouteParam(req.params.id);
-        const active = parseUpvoteState(req.body?.active ?? req.query.active);
+        const vote = parseVoteState(req.body?.vote ?? req.query.vote);
 
         if (!user) {
             res.status(401).json({ error: 'Authentication is required.' });
@@ -141,10 +141,10 @@ export class QuestionsController {
         }
 
         try {
-            const comment = await this.questionsService.upVoteComment({
+            const comment = await this.questionsService.setCommentVote({
                 userId: user.id,
                 commentId,
-                active,
+                vote,
             });
             res.json(comment);
         } catch (error) {
@@ -176,10 +176,14 @@ export class QuestionsController {
     }
 }
 
-function parseUpvoteState(value: unknown): boolean {
-    if (value === false || value === 0 || value === '0' || value === 'false') {
-        return false;
+function parseVoteState(value: unknown): 'up' | 'down' | 'none' {
+    if (value === 'down') {
+        return 'down';
     }
 
-    return true;
+    if (value === 'none') {
+        return 'none';
+    }
+
+    return 'up';
 }

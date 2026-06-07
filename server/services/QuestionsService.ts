@@ -7,8 +7,9 @@ import type {
     PaginationData,
     QuestionData,
     QuestionWithCommentsData,
-    ToggleCommentUpvoteData,
-    ToggleQuestionUpvoteData,
+    SetCommentVoteData,
+    SetQuestionVoteData,
+    VoteState,
 } from '../interfaces/QuestionInterfaces.ts';
 import { QuestionImageService } from './QuestionImageService.ts';
 
@@ -51,8 +52,8 @@ export class QuestionsService {
             id: comment.id,
             text: comment.text,
             createdAt: comment.createdAt,
-            upvotes: comment.upvotes,
-            likedByUser: false,
+            votes: comment.votes,
+            voteState: 'none',
             user: comment.user,
         };
     }
@@ -113,10 +114,10 @@ export class QuestionsService {
             prisma.questions.count({ where }),
         ]);
 
-        const upvotedQuestionIds = await this.getUpvotedQuestionIds(questions, pagination.userId);
+        const questionVoteStates = await this.getQuestionVoteStates(questions, pagination.userId);
 
         return {
-            data: questions.map((question) => this.toQuestionData(question, upvotedQuestionIds.has(question.id))),
+            data: questions.map((question) => this.toQuestionData(question, questionVoteStates.get(question.id) ?? 'none')),
             page,
             limit,
             total,
@@ -180,22 +181,22 @@ export class QuestionsService {
             throw new Error('Question was not found.');
         }
 
-        const [likedByUser, upvotedCommentIds] = await Promise.all([
+        const [questionVoteState, commentVoteStates] = await Promise.all([
             pagination.userId
-            ? await this.hasUserUpvotedQuestion(pagination.userId, question.id)
-            : false,
-            this.getUpvotedCommentIds(comments, pagination.userId),
+            ? await this.getUserQuestionVoteState(pagination.userId, question.id)
+            : 'none',
+            this.getCommentVoteStates(comments, pagination.userId),
         ]);
 
         return {
-            question: this.toQuestionData(question, likedByUser),
+            question: this.toQuestionData(question, questionVoteState),
             comments: {
                 data: comments.map((comment) => ({
                     id: comment.id,
                     text: comment.text,
                     createdAt: comment.createdAt,
-                    upvotes: comment.upvotes,
-                    likedByUser: upvotedCommentIds.has(comment.id),
+                    votes: comment.votes,
+                    voteState: commentVoteStates.get(comment.id) ?? 'none',
                     user: comment.user,
                 })),
                 page,
@@ -206,7 +207,7 @@ export class QuestionsService {
         };
     }
 
-    async upVoteQuestion(data: ToggleQuestionUpvoteData): Promise<QuestionData> {
+    async setQuestionVote(data: SetQuestionVoteData): Promise<QuestionData> {
         const question = await prisma.questions.findUnique({
             where: {
                 id: data.questionId,
@@ -230,7 +231,7 @@ export class QuestionsService {
             throw new Error('Question was not found.');
         }
 
-        const existingUpvote = await prisma.questionUpvotes.findUnique({
+        const existingVote = await prisma.questionVotes.findUnique({
             where: {
                 userId_questionId: {
                     userId: data.userId,
@@ -239,62 +240,44 @@ export class QuestionsService {
             },
         });
 
-        if (data.active && existingUpvote) {
-            return this.toQuestionData(question, true);
+        const currentVoteState = this.getVoteStateFromRecord(existingVote);
+
+        if (currentVoteState === data.vote) {
+            return this.toQuestionData(question, currentVoteState);
         }
 
-        if (!data.active && !existingUpvote) {
-            return this.toQuestionData(question, false);
-        }
+        const voteDelta = getVoteDelta(currentVoteState, data.vote);
 
         const updatedQuestion = await prisma.$transaction(async (tx) => {
-            if (data.active) {
-                const created = await tx.questionUpvotes.createMany({
-                    data: [{
-                        userId: data.userId,
-                        questionId: data.questionId,
-                    }],
-                    skipDuplicates: true,
-                });
-
-                if (created.count === 0) {
-                    return this.toQuestionData(question, true);
-                }
-
-                return tx.questions.update({
+            if (data.vote === 'none') {
+                await tx.questionVotes.delete({
                     where: {
-                        id: data.questionId,
+                        userId_questionId: {
+                            userId: data.userId,
+                            questionId: data.questionId,
+                        },
+                    },
+                });
+            } else if (existingVote) {
+                await tx.questionVotes.update({
+                    where: {
+                        userId_questionId: {
+                            userId: data.userId,
+                            questionId: data.questionId,
+                        },
                     },
                     data: {
-                        upvotes: {
-                            increment: 1,
-                        },
-                    },
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                name: true,
-                            },
-                        },
-                        _count: {
-                            select: {
-                                comments: true,
-                            },
-                        },
+                        isUpvote: data.vote === 'up',
                     },
                 });
-            }
-
-            const deleted = await tx.questionUpvotes.deleteMany({
-                where: {
-                    userId: data.userId,
-                    questionId: data.questionId,
-                },
-            });
-
-            if (deleted.count === 0) {
-                return this.toQuestionData(question, false);
+            } else {
+                await tx.questionVotes.create({
+                    data: {
+                        userId: data.userId,
+                        questionId: data.questionId,
+                        isUpvote: data.vote === 'up',
+                    },
+                });
             }
 
             return tx.questions.update({
@@ -302,8 +285,8 @@ export class QuestionsService {
                     id: data.questionId,
                 },
                 data: {
-                    upvotes: {
-                        decrement: 1,
+                    votes: {
+                        increment: voteDelta,
                     },
                 },
                 include: {
@@ -322,14 +305,10 @@ export class QuestionsService {
             });
         });
 
-        if ('likedByUser' in updatedQuestion) {
-            return updatedQuestion;
-        }
-
-        return this.toQuestionData(updatedQuestion, data.active);
+        return this.toQuestionData(updatedQuestion, data.vote);
     }
 
-    async upVoteComment(data: ToggleCommentUpvoteData): Promise<CommentData> {
+    async setCommentVote(data: SetCommentVoteData): Promise<CommentData> {
         const comment = await prisma.comments.findUnique({
             where: {
                 id: data.commentId,
@@ -348,7 +327,7 @@ export class QuestionsService {
             throw new Error('Comment was not found.');
         }
 
-        const existingUpvote = await prisma.commentUpvotes.findUnique({
+        const existingVote = await prisma.commentVotes.findUnique({
             where: {
                 userId_commentId: {
                     userId: data.userId,
@@ -357,57 +336,44 @@ export class QuestionsService {
             },
         });
 
-        if (data.active && existingUpvote) {
-            return this.toCommentData(comment, true);
+        const currentVoteState = this.getVoteStateFromRecord(existingVote);
+
+        if (currentVoteState === data.vote) {
+            return this.toCommentData(comment, currentVoteState);
         }
 
-        if (!data.active && !existingUpvote) {
-            return this.toCommentData(comment, false);
-        }
+        const voteDelta = getVoteDelta(currentVoteState, data.vote);
 
         const updatedComment = await prisma.$transaction(async (tx) => {
-            if (data.active) {
-                const created = await tx.commentUpvotes.createMany({
-                    data: [{
-                        userId: data.userId,
-                        commentId: data.commentId,
-                    }],
-                    skipDuplicates: true,
-                });
-
-                if (created.count === 0) {
-                    return comment;
-                }
-
-                return tx.comments.update({
+            if (data.vote === 'none') {
+                await tx.commentVotes.delete({
                     where: {
-                        id: data.commentId,
+                        userId_commentId: {
+                            userId: data.userId,
+                            commentId: data.commentId,
+                        },
+                    },
+                });
+            } else if (existingVote) {
+                await tx.commentVotes.update({
+                    where: {
+                        userId_commentId: {
+                            userId: data.userId,
+                            commentId: data.commentId,
+                        },
                     },
                     data: {
-                        upvotes: {
-                            increment: 1,
-                        },
-                    },
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                name: true,
-                            },
-                        },
+                        isUpvote: data.vote === 'up',
                     },
                 });
-            }
-
-            const deleted = await tx.commentUpvotes.deleteMany({
-                where: {
-                    userId: data.userId,
-                    commentId: data.commentId,
-                },
-            });
-
-            if (deleted.count === 0) {
-                return comment;
+            } else {
+                await tx.commentVotes.create({
+                    data: {
+                        userId: data.userId,
+                        commentId: data.commentId,
+                        isUpvote: data.vote === 'up',
+                    },
+                });
             }
 
             return tx.comments.update({
@@ -415,8 +381,8 @@ export class QuestionsService {
                     id: data.commentId,
                 },
                 data: {
-                    upvotes: {
-                        decrement: 1,
+                    votes: {
+                        increment: voteDelta,
                     },
                 },
                 include: {
@@ -430,7 +396,7 @@ export class QuestionsService {
             });
         });
 
-        return this.toCommentData(updatedComment, data.active);
+        return this.toCommentData(updatedComment, data.vote);
     }
 
     private toQuestionData(question: {
@@ -439,7 +405,7 @@ export class QuestionsService {
         description: string;
         imageData?: Uint8Array | Buffer | null;
         createdAt: Date;
-        upvotes: number;
+        votes: number;
         _count: {
             comments: number;
         };
@@ -447,15 +413,15 @@ export class QuestionsService {
             id: string;
             name: string;
         };
-    }, likedByUser = false): QuestionData {
+    }, voteState: VoteState = 'none'): QuestionData {
         return {
             id: question.id,
             title: question.title,
             description: question.description,
             imageSrc: this.imageService.toImageSrc(question.imageData),
             createdAt: question.createdAt,
-            upvotes: question.upvotes,
-            likedByUser,
+            votes: question.votes,
+            voteState,
             commentCount: question._count.comments,
             user: question.user,
         };
@@ -492,24 +458,24 @@ export class QuestionsService {
         id: string;
         text: string;
         createdAt: Date;
-        upvotes: number;
+        votes: number;
         user: {
             id: string;
             name: string;
         };
-    }, likedByUser = false): CommentData {
+    }, voteState: VoteState = 'none'): CommentData {
         return {
             id: comment.id,
             text: comment.text,
             createdAt: comment.createdAt,
-            upvotes: comment.upvotes,
-            likedByUser,
+            votes: comment.votes,
+            voteState,
             user: comment.user,
         };
     }
 
-    private async hasUserUpvotedQuestion(userId: string, questionId: string): Promise<boolean> {
-        const upvote = await prisma.questionUpvotes.findUnique({
+    private async getUserQuestionVoteState(userId: string, questionId: string): Promise<VoteState> {
+        const vote = await prisma.questionVotes.findUnique({
             where: {
                 userId_questionId: {
                     userId,
@@ -518,18 +484,18 @@ export class QuestionsService {
             },
         });
 
-        return Boolean(upvote);
+        return this.getVoteStateFromRecord(vote);
     }
 
-    private async getUpvotedQuestionIds(
+    private async getQuestionVoteStates(
         questions: Array<{ id: string; userId: string }>,
         userId?: string,
-    ): Promise<Set<string>> {
+    ): Promise<Map<string, VoteState>> {
         if (!userId || questions.length === 0) {
-            return new Set();
+            return new Map();
         }
 
-        const upvotes = await prisma.questionUpvotes.findMany({
+        const votes = await prisma.questionVotes.findMany({
             where: {
                 userId,
                 questionId: {
@@ -538,21 +504,22 @@ export class QuestionsService {
             },
             select: {
                 questionId: true,
+                isUpvote: true,
             },
         });
 
-        return new Set(upvotes.map((upvote) => upvote.questionId));
+        return new Map(votes.map((vote) => [vote.questionId, vote.isUpvote ? 'up' : 'down']));
     }
 
-    private async getUpvotedCommentIds(
+    private async getCommentVoteStates(
         comments: Array<{ id: string }>,
         userId?: string,
-    ): Promise<Set<string>> {
+    ): Promise<Map<string, VoteState>> {
         if (!userId || comments.length === 0) {
-            return new Set();
+            return new Map();
         }
 
-        const upvotes = await prisma.commentUpvotes.findMany({
+        const votes = await prisma.commentVotes.findMany({
             where: {
                 userId,
                 commentId: {
@@ -561,11 +528,36 @@ export class QuestionsService {
             },
             select: {
                 commentId: true,
+                isUpvote: true,
             },
         });
 
-        return new Set(upvotes.map((upvote) => upvote.commentId));
+        return new Map(votes.map((vote) => [vote.commentId, vote.isUpvote ? 'up' : 'down']));
     }
+
+    private getVoteStateFromRecord(vote?: { isUpvote: boolean } | null): VoteState {
+        if (!vote) {
+            return 'none';
+        }
+
+        return vote.isUpvote ? 'up' : 'down';
+    }
+}
+
+function getVoteDelta(currentVote: VoteState, nextVote: VoteState): number {
+    if (currentVote === nextVote) {
+        return 0;
+    }
+
+    if (nextVote === 'none') {
+        return currentVote === 'up' ? -1 : currentVote === 'down' ? 1 : 0;
+    }
+
+    if (currentVote === 'none') {
+        return nextVote === 'up' ? 1 : -1;
+    }
+
+    return nextVote === 'up' ? 2 : -2;
 }
 
 function normalizePage(page: number): number {

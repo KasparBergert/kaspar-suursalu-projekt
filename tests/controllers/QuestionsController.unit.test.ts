@@ -29,8 +29,8 @@ describe('QuestionsController', () => {
         title: 'How does this work?',
         description: 'I want to understand the flow.',
         createdAt: new Date('2026-05-06T12:00:00.000Z'),
-        upvotes: 3,
-        likedByUser: false,
+        votes: 3,
+        voteState: 'none',
         commentCount: 2,
         user: {
             id: 'user-1',
@@ -42,8 +42,8 @@ describe('QuestionsController', () => {
         id: 'answer-1',
         text: 'This is the answer.',
         createdAt: new Date('2026-05-06T12:00:00.000Z'),
-        upvotes: 0,
-        likedByUser: false,
+        votes: 0,
+        voteState: 'none',
         user: {
             id: 'user-1',
             name: 'Kaspar',
@@ -52,7 +52,7 @@ describe('QuestionsController', () => {
 
     let questionsService: Pick<
         QuestionsService,
-        'createQuestion' | 'getQuestions' | 'getQuestion' | 'addAnswerToQuestion' | 'upVoteQuestion' | 'upVoteComment'
+        'createQuestion' | 'getQuestions' | 'getQuestion' | 'addAnswerToQuestion' | 'setQuestionVote' | 'setCommentVote'
     >;
 
     beforeEach(() => {
@@ -61,8 +61,8 @@ describe('QuestionsController', () => {
             getQuestions: vi.fn(),
             getQuestion: vi.fn(),
             addAnswerToQuestion: vi.fn(),
-            upVoteQuestion: vi.fn(),
-            upVoteComment: vi.fn(),
+            setQuestionVote: vi.fn(),
+            setCommentVote: vi.fn(),
         };
     });
 
@@ -212,89 +212,93 @@ describe('QuestionsController', () => {
         expect(res.json).toHaveBeenCalledWith({ error: 'Authentication is required.' });
     });
 
-    it('upvotes a question for the authenticated user', async () => {
-        vi.mocked(questionsService.upVoteQuestion).mockResolvedValue({
+    it('sets an upvote on a question for the authenticated user', async () => {
+        vi.mocked(questionsService.setQuestionVote).mockResolvedValue({
             ...question,
-            upvotes: 4,
+            votes: 4,
+            voteState: 'up',
         });
         const req = {
             params: {
                 id: 'question-1',
             },
             body: {
-                active: true,
+                vote: 'up',
             },
         } as unknown as Request;
         const res = createResponse(user);
 
-        await new QuestionsController(questionsService as QuestionsService).upVoteQuestion(req, res);
+        await new QuestionsController(questionsService as QuestionsService).setQuestionVote(req, res);
 
-        expect(questionsService.upVoteQuestion).toHaveBeenCalledWith({
+        expect(questionsService.setQuestionVote).toHaveBeenCalledWith({
             userId: 'user-1',
             questionId: 'question-1',
-            active: true,
+            vote: 'up',
         });
         expect(res.json).toHaveBeenCalledWith({
             ...question,
-            upvotes: 4,
+            votes: 4,
+            voteState: 'up',
         });
     });
 
-    it('can remove an upvote for the authenticated user', async () => {
-        vi.mocked(questionsService.upVoteQuestion).mockResolvedValue({
+    it('can clear a question vote for the authenticated user', async () => {
+        vi.mocked(questionsService.setQuestionVote).mockResolvedValue({
             ...question,
-            upvotes: 2,
+            votes: 2,
+            voteState: 'none',
         });
         const req = {
             params: {
                 id: 'question-1',
             },
             body: {
-                active: false,
+                vote: 'none',
             },
         } as unknown as Request;
         const res = createResponse(user);
 
-        await new QuestionsController(questionsService as QuestionsService).upVoteQuestion(req, res);
+        await new QuestionsController(questionsService as QuestionsService).setQuestionVote(req, res);
 
-        expect(questionsService.upVoteQuestion).toHaveBeenCalledWith({
+        expect(questionsService.setQuestionVote).toHaveBeenCalledWith({
             userId: 'user-1',
             questionId: 'question-1',
-            active: false,
+            vote: 'none',
         });
         expect(res.json).toHaveBeenCalledWith({
             ...question,
-            upvotes: 2,
+            votes: 2,
+            voteState: 'none',
         });
     });
 
-    it('upvotes a comment for the authenticated user', async () => {
-        vi.mocked(questionsService.upVoteComment).mockResolvedValue({
+    it('sets a downvote on a comment for the authenticated user', async () => {
+        vi.mocked(questionsService.setCommentVote).mockResolvedValue({
             ...answer,
-            upvotes: 1,
-            likedByUser: true,
+            votes: -1,
+            voteState: 'down',
         });
         const req = {
             params: {
                 id: 'answer-1',
             },
             body: {
-                active: true,
+                vote: 'down',
             },
         } as unknown as Request;
         const res = createResponse(user);
 
-        await new QuestionsController(questionsService as QuestionsService).upVoteComment(req, res);
+        await new QuestionsController(questionsService as QuestionsService).setCommentVote(req, res);
 
-        expect(questionsService.upVoteComment).toHaveBeenCalledWith({
+        expect(questionsService.setCommentVote).toHaveBeenCalledWith({
             userId: 'user-1',
             commentId: 'answer-1',
-            active: true,
+            vote: 'down',
         });
         expect(res.json).toHaveBeenCalledWith({
             ...answer,
-            upvotes: 1,
-            likedByUser: true,
+            votes: -1,
+            voteState: 'down',
         });
     });
 });

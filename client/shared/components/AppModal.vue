@@ -14,17 +14,17 @@ const { activeComponent, closeModal, state } = useModal();
                 :aria-label="state.title || 'Dialog'"
                 @click.stop
             >
-                <header class="modal-header">
-                    <h2 v-if="state.title">{{ state.title }}</h2>
-                    <button
-                        class="modal-close"
-                        type="button"
-                        aria-label="Close dialog"
-                        @click="closeModal"
-                    >
-                        &times;
-                    </button>
+                <header v-if="state.title" class="modal-header">
+                    <h2>{{ state.title }}</h2>
                 </header>
+                <button
+                    class="modal-close"
+                    type="button"
+                    aria-label="Close dialog"
+                    @click="closeModal"
+                >
+                    &times;
+                </button>
 
                 <component
                     :is="activeComponent"

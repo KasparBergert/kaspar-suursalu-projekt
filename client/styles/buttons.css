@@ -120,9 +120,9 @@
     gap: 8px;
     align-items: center;
     justify-content: center;
-    min-width: 64px;
-    padding: 0 12px;
-    border-radius: 18px;
+    min-width: 36px;
+    padding: 0 10px;
+    border-radius: 16px;
     transition:
         transform 120ms ease,
         border-color 160ms ease,
@@ -144,6 +144,14 @@
 
 .vote-button.is-active .action-icon {
     color: #8bbcff;
+}
+
+.vote-arrow-button {
+    min-width: 32px;
+    min-height: 28px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 12px;
 }
 
 .comment-button {

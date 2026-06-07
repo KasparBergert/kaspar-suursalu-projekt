@@ -21,14 +21,16 @@ export type QuestionUserData = {
     name: string;
 };
 
+export type VoteState = 'up' | 'down' | 'none';
+
 export type QuestionData = {
     id: string;
     title: string;
     description: string;
     imageSrc?: string;
     createdAt: string;
-    upvotes: number;
-    likedByUser: boolean;
+    votes: number;
+    voteState: VoteState;
     commentCount: number;
     user: QuestionUserData;
 };
@@ -37,8 +39,8 @@ export type CommentData = {
     id: string;
     text: string;
     createdAt: string;
-    upvotes: number;
-    likedByUser: boolean;
+    votes: number;
+    voteState: VoteState;
     user: QuestionUserData;
 };
 

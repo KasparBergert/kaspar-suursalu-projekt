@@ -6,15 +6,16 @@ export class UserService {
     private readonly imageService = new QuestionImageService();
 
     async getQuestions(userId: string): Promise<QuestionData[]> {
-        const upvotes = await prisma.questionUpvotes.findMany({
+        const votes = await prisma.questionVotes.findMany({
             where: {
                 userId,
             },
             select: {
                 questionId: true,
+                isUpvote: true,
             },
         });
-        const upvotedQuestionIds = new Set(upvotes.map((upvote) => upvote.questionId));
+        const voteByQuestionId = new Map(votes.map((vote) => [vote.questionId, vote.isUpvote ? 'up' : 'down']));
         const questions = await prisma.questions.findMany({
             where: {
                 userId,
@@ -40,8 +41,8 @@ export class UserService {
             description: question.description,
             imageSrc: this.imageService.toImageSrc(question.imageData),
             createdAt: question.createdAt,
-            upvotes: question.upvotes,
-            likedByUser: upvotedQuestionIds.has(question.id),
+            votes: question.votes,
+            voteState: voteByQuestionId.get(question.id) ?? 'none',
             commentCount: question._count.comments,
             user: question.user,
         }));

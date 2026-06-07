@@ -16,14 +16,16 @@ export interface QuestionUserData {
     name: string;
 }
 
+export type VoteState = 'up' | 'down' | 'none';
+
 export interface QuestionData {
     id: string;
     title: string;
     description: string;
     imageSrc?: string;
     createdAt: Date;
-    upvotes: number;
-    likedByUser: boolean;
+    votes: number;
+    voteState: VoteState;
     commentCount: number;
     user: QuestionUserData;
 }
@@ -32,8 +34,8 @@ export interface CommentData {
     id: string;
     text: string;
     createdAt: Date;
-    upvotes: number;
-    likedByUser: boolean;
+    votes: number;
+    voteState: VoteState;
     user: QuestionUserData;
 }
 
@@ -55,14 +57,14 @@ export interface AddAnswerData {
     text: string;
 }
 
-export interface ToggleQuestionUpvoteData {
+export interface SetQuestionVoteData {
     userId: string;
     questionId: string;
-    active: boolean;
+    vote: VoteState;
 }
 
-export interface ToggleCommentUpvoteData {
+export interface SetCommentVoteData {
     userId: string;
     commentId: string;
-    active: boolean;
+    vote: VoteState;
 }

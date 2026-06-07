@@ -12,6 +12,20 @@ export function useSelectedQuestion() {
         selectedQuestion.value = await questionsApi.getQuestion(questionId);
     }
 
+    function clearSelectedQuestion(): void {
+        selectedQuestionId.value = null;
+        selectedQuestion.value = null;
+    }
+
+    async function toggleQuestion(questionId: string): Promise<void> {
+        if (selectedQuestionId.value === questionId) {
+            clearSelectedQuestion();
+            return;
+        }
+
+        await selectQuestion(questionId);
+    }
+
     function updateSelectedQuestion(updatedQuestion: QuestionData): void {
         if (selectedQuestion.value?.question.id === updatedQuestion.id) {
             selectedQuestion.value.question = updatedQuestion;
@@ -19,10 +33,12 @@ export function useSelectedQuestion() {
     }
 
     return {
+        clearSelectedQuestion,
         selectQuestion,
         selectedComments,
         selectedQuestion,
         selectedQuestionId,
+        toggleQuestion,
         updateSelectedQuestion,
     };
 }

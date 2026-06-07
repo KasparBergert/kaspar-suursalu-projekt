@@ -1,5 +1,5 @@
 import * as questionsApi from '../services/questionsApi.ts';
-import type { CreateQuestionPayload, QuestionData } from '../../../types.ts';
+import type { CreateQuestionPayload, QuestionData, VoteState } from '../../../types.ts';
 import type { useQuestionCollections } from './useQuestionCollections.ts';
 import type { useSelectedQuestion } from './useSelectedQuestion.ts';
 
@@ -18,13 +18,13 @@ export async function createQuestion(
     return question;
 }
 
-export async function upvoteQuestion(
+export async function setQuestionVote(
     questionId: string,
-    active: boolean,
+    vote: VoteState,
     collections: QuestionCollections,
     selectedQuestion: SelectedQuestion,
 ): Promise<QuestionData> {
-    const updatedQuestion = await questionsApi.upvoteQuestion(questionId, active);
+    const updatedQuestion = await questionsApi.setQuestionVote(questionId, vote);
 
     collections.replaceQuestion(updatedQuestion);
     selectedQuestion.updateSelectedQuestion(updatedQuestion);

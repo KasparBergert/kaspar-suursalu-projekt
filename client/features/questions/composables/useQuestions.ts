@@ -2,9 +2,10 @@ import { ref, type Ref } from 'vue';
 import type {
     CreateQuestionPayload,
     QuestionData,
+    VoteState,
 } from '../../../types.ts';
 import type { useNotice } from '../../../shared/composables/useNotice.ts';
-import { addAnswer as addQuestionAnswer, createQuestion as createQuestionCommand, upvoteQuestion } from './questionCommands.ts';
+import { addAnswer as addQuestionAnswer, createQuestion as createQuestionCommand, setQuestionVote } from './questionCommands.ts';
 import { runQuestionTask } from './runQuestionTask.ts';
 import { useQuestionCollections } from './useQuestionCollections.ts';
 import { useSelectedQuestion } from './useSelectedQuestion.ts';
@@ -48,6 +49,14 @@ export function useQuestions(
         );
     }
 
+    function toggleQuestion(questionId: string): Promise<void | undefined> {
+        return runQuestionTask(
+            isLoading,
+            notice,
+            () => selectedQuestion.toggleQuestion(questionId),
+        );
+    }
+
     function loadMyQuestions(): Promise<void | undefined> {
         return runQuestionTask(
             isLoading,
@@ -68,16 +77,16 @@ export function useQuestions(
         return Boolean(question);
     }
 
-    async function upvote(question: QuestionData, active: boolean): Promise<QuestionData | null> {
+    async function vote(question: QuestionData, voteState: VoteState): Promise<QuestionData | null> {
         if (!isAuthenticated.value) {
-            notice.showErrorMessage('Log in to upvote questions.');
+            notice.showErrorMessage('Log in to vote on questions.');
             return null;
         }
 
         notice.clearNotice();
 
         try {
-            return await upvoteQuestion(question.id, active, collections, selectedQuestion);
+            return await setQuestionVote(question.id, voteState, collections, selectedQuestion);
         } catch (error) {
             notice.showError(error);
             return null;
@@ -118,7 +127,8 @@ export function useQuestions(
         selectedQuestion: selectedQuestion.selectedQuestion,
         selectedQuestionId: selectedQuestion.selectedQuestionId,
         selectQuestion,
+        toggleQuestion,
         totalPages: collections.totalPages,
-        upvote,
+        vote,
     };
 }

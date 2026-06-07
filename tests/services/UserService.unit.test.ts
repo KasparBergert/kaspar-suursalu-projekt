@@ -4,7 +4,7 @@ const prisma = vi.hoisted(() => ({
     questions: {
         findMany: vi.fn(),
     },
-    questionUpvotes: {
+    questionVotes: {
         findMany: vi.fn(),
     },
 }));
@@ -26,7 +26,7 @@ const question = {
     title: 'What is clean code?',
     description: 'I want a practical answer.',
     createdAt: new Date('2026-05-06T12:00:00.000Z'),
-    upvotes: 5,
+    votes: 5,
     user,
     _count: {
         comments: 1,
@@ -40,8 +40,9 @@ describe('UserService', () => {
 
     it('returns the questions that belong to a user', async () => {
         prisma.questions.findMany.mockResolvedValue([question]);
-        prisma.questionUpvotes.findMany.mockResolvedValue([{
+        prisma.questionVotes.findMany.mockResolvedValue([{
             questionId: 'question-1',
+            isUpvote: true,
         }]);
 
         const result = await new UserService().getQuestions('user-1');
@@ -52,8 +53,8 @@ describe('UserService', () => {
                 title: 'What is clean code?',
                 description: 'I want a practical answer.',
                 createdAt: new Date('2026-05-06T12:00:00.000Z'),
-                upvotes: 5,
-                likedByUser: true,
+                votes: 5,
+                voteState: 'up',
                 commentCount: 1,
                 user,
             },

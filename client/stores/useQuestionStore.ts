@@ -5,7 +5,7 @@ import { useModal } from '../shared/composables/useModal.ts';
 import { useNotice } from '../shared/composables/useNotice.ts';
 import { useAppRouter } from '../router.ts';
 import { useAuthStore } from './useAuthStore.ts';
-import type { QuestionData, QuestionListModel } from '../types.ts';
+import type { QuestionData, QuestionListModel, VoteState } from '../types.ts';
 
 let questionStore: ReturnType<typeof createQuestionStore> | null = null;
 
@@ -64,7 +64,6 @@ function createQuestionStore() {
                 isSubmitting: isSubmitting.value,
                 onSubmit: createQuestion,
             },
-            title: 'Ask a question',
         });
     }
 
@@ -79,20 +78,20 @@ function createQuestionStore() {
             return;
         }
 
-        await questions.selectQuestion(questionId);
+        await questions.toggleQuestion(questionId);
     }
 
     async function answerQuestion(text: string): Promise<void> {
         await questions.addAnswer(text);
     }
 
-    async function upvoteQuestion(question: QuestionData, active: boolean): Promise<QuestionData | null> {
+    async function voteOnQuestion(question: QuestionData, voteState: VoteState): Promise<QuestionData | null> {
         if (!auth.session.isAuthenticated.value) {
             auth.openLoginPage();
             return null;
         }
 
-        return questions.upvote(question, active);
+        return questions.vote(question, voteState);
     }
 
     return {
@@ -106,6 +105,6 @@ function createQuestionStore() {
         openQuestion,
         profileModel,
         questions,
-        upvoteQuestion,
+        voteOnQuestion,
     };
 }

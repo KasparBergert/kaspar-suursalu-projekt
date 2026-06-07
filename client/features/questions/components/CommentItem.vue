@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ArrowUp } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ArrowDown, ArrowUp } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
 import * as questionsApi from '../services/questionsApi.ts';
 import { useAuthStore } from '../../../stores/useAuthStore.ts';
-import type { CommentData } from '../../../types.ts';
+import type { CommentData, VoteState } from '../../../types.ts';
 import { formatDate } from '../../../utils/formatDate.ts';
 
 const props = defineProps<{
@@ -11,12 +11,20 @@ const props = defineProps<{
 }>();
 
 const auth = useAuthStore();
-const isUpvoted = ref(props.comment.likedByUser);
-const upvoteCount = ref(props.comment.upvotes);
-const upvoteIsPending = ref(false);
+const voteState = ref<VoteState>(props.comment.voteState);
+const voteCount = ref(props.comment.votes);
+const voteIsPending = ref(false);
 
-async function upvote(): Promise<void> {
-    if (upvoteIsPending.value) {
+watch(() => props.comment.voteState, (nextVoteState) => {
+    voteState.value = nextVoteState;
+});
+
+watch(() => props.comment.votes, (nextVoteCount) => {
+    voteCount.value = nextVoteCount;
+});
+
+async function setVote(nextVote: Exclude<VoteState, 'none'>): Promise<void> {
+    if (voteIsPending.value) {
         return;
     }
 
@@ -25,20 +33,37 @@ async function upvote(): Promise<void> {
         return;
     }
 
-    const nextActiveState = !isUpvoted.value;
+    const previousVoteState = voteState.value;
+    const resolvedVote = previousVoteState === nextVote ? 'none' : nextVote;
 
-    isUpvoted.value = nextActiveState;
-    upvoteCount.value += nextActiveState ? 1 : -1;
-    upvoteIsPending.value = true;
+    voteState.value = resolvedVote;
+    voteCount.value += getVoteDelta(previousVoteState, resolvedVote);
+    voteIsPending.value = true;
 
     try {
-        await questionsApi.upvoteComment(props.comment.id, nextActiveState);
+        await questionsApi.setCommentVote(props.comment.id, resolvedVote);
     } catch {
-        isUpvoted.value = !nextActiveState;
-        upvoteCount.value += nextActiveState ? -1 : 1;
+        voteState.value = previousVoteState;
+        voteCount.value -= getVoteDelta(previousVoteState, resolvedVote);
     } finally {
-        upvoteIsPending.value = false;
+        voteIsPending.value = false;
     }
+}
+
+function getVoteDelta(previousVote: VoteState, nextVote: VoteState): number {
+    if (previousVote === nextVote) {
+        return 0;
+    }
+
+    if (nextVote === 'none') {
+        return previousVote === 'up' ? -1 : previousVote === 'down' ? 1 : 0;
+    }
+
+    if (previousVote === 'none') {
+        return nextVote === 'up' ? 1 : -1;
+    }
+
+    return nextVote === 'up' ? 2 : -2;
 }
 </script>
 
@@ -53,18 +78,31 @@ async function upvote(): Promise<void> {
                 <span>{{ formatDate(comment.createdAt) }}</span>
             </div>
             <p>{{ comment.text }}</p>
-            <button
-                class="vote-button comment-vote-button"
-                :class="{ 'is-active': isUpvoted }"
-                type="button"
-                :aria-pressed="isUpvoted"
-                :disabled="upvoteIsPending"
-                @click="upvote"
-            >
-                <ArrowUp class="action-icon" :stroke-width="2.5" />
-                Upvote
-                <strong>{{ upvoteCount }}</strong>
-            </button>
+            <div class="vote-pill comment-vote-pill">
+                <button
+                    class="vote-button vote-arrow-button"
+                    :class="{ 'is-active': voteState === 'up' }"
+                    type="button"
+                    aria-label="Upvote answer"
+                    :aria-pressed="voteState === 'up'"
+                    :disabled="voteIsPending"
+                    @click="setVote('up')"
+                >
+                    <ArrowUp class="action-icon" :stroke-width="2.5" />
+                </button>
+                <strong class="vote-pill-count">{{ voteCount }}</strong>
+                <button
+                    class="vote-button vote-arrow-button"
+                    :class="{ 'is-active': voteState === 'down' }"
+                    type="button"
+                    aria-label="Downvote answer"
+                    :aria-pressed="voteState === 'down'"
+                    :disabled="voteIsPending"
+                    @click="setVote('down')"
+                >
+                    <ArrowDown class="action-icon" :stroke-width="2.5" />
+                </button>
+            </div>
         </div>
     </article>
 </template>

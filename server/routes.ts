@@ -34,8 +34,8 @@ router.get('/profile/questions', requireAuth, userController.getMyQuestions);
 router.get('/questions', questionsController.getQuestions);
 router.post('/questions', requireAuth, questionsController.createQuestion);
 router.get('/questions/:id', questionsController.getQuestion);
-router.post('/questions/:id/upvotes', requireAuth, questionsController.upVoteQuestion);
+router.post('/questions/:id/votes', requireAuth, questionsController.setQuestionVote);
 router.post('/questions/:id/answers', requireAuth, questionsController.addAnswer);
-router.post('/comments/:id/upvotes', requireAuth, questionsController.upVoteComment);
+router.post('/comments/:id/votes', requireAuth, questionsController.setCommentVote);
 
 export default router;

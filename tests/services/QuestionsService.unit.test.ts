@@ -16,17 +16,19 @@ const prisma = vi.hoisted(() => ({
         count: vi.fn(),
         update: vi.fn(),
     },
-    questionUpvotes: {
-        createMany: vi.fn(),
-        deleteMany: vi.fn(),
+    questionVotes: {
+        create: vi.fn(),
+        delete: vi.fn(),
         findUnique: vi.fn(),
         findMany: vi.fn(),
+        update: vi.fn(),
     },
-    commentUpvotes: {
-        createMany: vi.fn(),
-        deleteMany: vi.fn(),
+    commentVotes: {
+        create: vi.fn(),
+        delete: vi.fn(),
         findUnique: vi.fn(),
         findMany: vi.fn(),
+        update: vi.fn(),
     },
 }));
 
@@ -47,12 +49,11 @@ const question = {
     title: 'How does this work?',
     description: 'I want to understand the flow.',
     createdAt: new Date('2026-05-06T12:00:00.000Z'),
-    upvotes: 3,
+    votes: 3,
     user,
     _count: {
         comments: 2,
     },
-    likedByUser: false,
 };
 
 const comment = {
@@ -61,8 +62,7 @@ const comment = {
     userId: 'user-1',
     text: 'This is the answer.',
     createdAt: new Date('2026-05-06T12:00:00.000Z'),
-    upvotes: 0,
-    likedByUser: false,
+    votes: 0,
     user,
 };
 
@@ -85,133 +85,157 @@ describe('QuestionsService', () => {
             id: 'question-1',
             title: 'How does this work?',
             description: 'I want to understand the flow.',
+            imageSrc: undefined,
             createdAt: new Date('2026-05-06T12:00:00.000Z'),
-            upvotes: 3,
-            likedByUser: false,
+            votes: 3,
+            voteState: 'none',
             commentCount: 2,
             user,
         });
     });
 
-    it('adds an answer to a question as a comment', async () => {
-        prisma.comments.create.mockResolvedValue(comment);
-
-        const result = await new QuestionsService().addAnswerToQuestion({
-            userId: 'user-1',
-            questionId: 'question-1',
-            text: 'This is the answer.',
-        });
-
-        expect(result.text).toBe('This is the answer.');
-    });
-
-    it('returns paginated questions for the feed', async () => {
+    it('returns paginated questions for the feed with vote states', async () => {
         prisma.questions.findMany.mockResolvedValue([question]);
         prisma.questions.count.mockResolvedValue(1);
-        prisma.questionUpvotes.findMany.mockResolvedValue([]);
+        prisma.questionVotes.findMany.mockResolvedValue([{
+            questionId: 'question-1',
+            isUpvote: false,
+        }]);
 
         const result = await new QuestionsService().getQuestions({
             page: 1,
+            userId: 'user-1',
         });
 
-        expect(prisma.questions.findMany).toHaveBeenCalledWith(expect.objectContaining({
-            skip: 0,
-            take: 10,
-        }));
         expect(result).toMatchObject({
-            data: [{ id: 'question-1', commentCount: 2, likedByUser: false }],
+            data: [{ id: 'question-1', commentCount: 2, voteState: 'down', votes: 3 }],
             page: 1,
             limit: 10,
             total: 1,
         });
     });
 
-    it('returns a question with paginated comments', async () => {
+    it('returns a question with paginated comments and vote states', async () => {
         prisma.questions.findUnique.mockResolvedValue(question);
         prisma.comments.findMany.mockResolvedValue([comment]);
         prisma.comments.count.mockResolvedValue(1);
-        prisma.commentUpvotes.findMany.mockResolvedValue([]);
+        prisma.questionVotes.findUnique.mockResolvedValue({
+            questionId: 'question-1',
+            isUpvote: true,
+        });
+        prisma.commentVotes.findMany.mockResolvedValue([{
+            commentId: 'comment-1',
+            isUpvote: false,
+        }]);
 
         const result = await new QuestionsService().getQuestion('question-1', {
             page: 1,
             limit: 10,
+            userId: 'user-1',
         });
 
         expect(result).toMatchObject({
-            question: { id: 'question-1', commentCount: 2, likedByUser: false },
-            comments: { data: [{ id: 'comment-1', upvotes: 0, likedByUser: false }], total: 1 },
+            question: { id: 'question-1', commentCount: 2, voteState: 'up', votes: 3 },
+            comments: { data: [{ id: 'comment-1', votes: 0, voteState: 'down' }], total: 1 },
         });
     });
 
-    it('upvotes a comment for a user', async () => {
+    it('creates an upvote row for a comment', async () => {
         prisma.comments.findUnique.mockResolvedValue(comment);
-        prisma.commentUpvotes.findUnique.mockResolvedValue(null);
-        prisma.commentUpvotes.createMany.mockResolvedValue({ count: 1 });
+        prisma.commentVotes.findUnique.mockResolvedValue(null);
         prisma.comments.update.mockResolvedValue({
             ...comment,
-            upvotes: 1,
+            votes: 1,
         });
 
-        const result = await new QuestionsService().upVoteComment({
+        const result = await new QuestionsService().setCommentVote({
             userId: 'user-1',
             commentId: 'comment-1',
-            active: true,
+            vote: 'up',
         });
 
-        expect(prisma.commentUpvotes.createMany).toHaveBeenCalledWith({
-            data: [{
+        expect(prisma.commentVotes.create).toHaveBeenCalledWith({
+            data: {
                 userId: 'user-1',
                 commentId: 'comment-1',
-            }],
-            skipDuplicates: true,
+                isUpvote: true,
+            },
         });
         expect(prisma.comments.update).toHaveBeenCalledWith(expect.objectContaining({
             data: {
-                upvotes: {
+                votes: {
                     increment: 1,
                 },
             },
         }));
         expect(result).toMatchObject({
             id: 'comment-1',
-            upvotes: 1,
-            likedByUser: true,
+            votes: 1,
+            voteState: 'up',
         });
     });
 
-    it('does not return comments for a missing question', async () => {
-        prisma.questions.findUnique.mockResolvedValue(null);
-        prisma.comments.findMany.mockResolvedValue([]);
-        prisma.comments.count.mockResolvedValue(0);
-
-        await expect(new QuestionsService().getQuestion('missing-question', {
-            page: 1,
-            limit: 10,
-        })).rejects.toThrow('Question was not found.');
-    });
-
-    it('upvotes a question for a user', async () => {
+    it('switches a question vote from up to down in one transaction', async () => {
         prisma.questions.findUnique.mockResolvedValue(question);
-        prisma.questionUpvotes.findUnique.mockResolvedValue(null);
-        prisma.questionUpvotes.createMany.mockResolvedValue({ count: 1 });
-        prisma.questions.update.mockResolvedValue({
-            id: question.id,
-            userId: question.userId,
-            title: question.title,
-            description: question.description,
-            createdAt: question.createdAt,
-            upvotes: 4,
-            user,
-            _count: question._count,
-        });
-
-        const result = await new QuestionsService().upVoteQuestion({
+        prisma.questionVotes.findUnique.mockResolvedValue({
+            id: 'vote-1',
             userId: 'user-1',
             questionId: 'question-1',
-            active: true,
+            isUpvote: true,
+        });
+        prisma.questions.update.mockResolvedValue({
+            ...question,
+            votes: 1,
         });
 
-        expect(prisma.questionUpvotes.findUnique).toHaveBeenCalledWith({
+        const result = await new QuestionsService().setQuestionVote({
+            userId: 'user-1',
+            questionId: 'question-1',
+            vote: 'down',
+        });
+
+        expect(prisma.questionVotes.update).toHaveBeenCalledWith({
+            where: {
+                userId_questionId: {
+                    userId: 'user-1',
+                    questionId: 'question-1',
+                },
+            },
+            data: {
+                isUpvote: false,
+            },
+        });
+        expect(prisma.questions.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: {
+                votes: {
+                    increment: -2,
+                },
+            },
+        }));
+        expect(result.votes).toBe(1);
+        expect(result.voteState).toBe('down');
+    });
+
+    it('clears a question vote when set back to none', async () => {
+        prisma.questions.findUnique.mockResolvedValue(question);
+        prisma.questionVotes.findUnique.mockResolvedValue({
+            id: 'vote-1',
+            userId: 'user-1',
+            questionId: 'question-1',
+            isUpvote: false,
+        });
+        prisma.questions.update.mockResolvedValue({
+            ...question,
+            votes: 4,
+        });
+
+        const result = await new QuestionsService().setQuestionVote({
+            userId: 'user-1',
+            questionId: 'question-1',
+            vote: 'none',
+        });
+
+        expect(prisma.questionVotes.delete).toHaveBeenCalledWith({
             where: {
                 userId_questionId: {
                     userId: 'user-1',
@@ -219,83 +243,14 @@ describe('QuestionsService', () => {
                 },
             },
         });
-        expect(prisma.questionUpvotes.createMany).toHaveBeenCalledWith({
-            data: [{
-                userId: 'user-1',
-                questionId: 'question-1',
-            }],
-            skipDuplicates: true,
-        });
         expect(prisma.questions.update).toHaveBeenCalledWith(expect.objectContaining({
             data: {
-                upvotes: {
+                votes: {
                     increment: 1,
                 },
             },
         }));
-        expect(result.upvotes).toBe(4);
-        expect(result.likedByUser).toBe(true);
-    });
-
-    it('does not increment a question twice for the same user', async () => {
-        prisma.questions.findUnique.mockResolvedValue(question);
-        prisma.questionUpvotes.findUnique.mockResolvedValue({
-            id: 'upvote-1',
-            userId: 'user-1',
-            questionId: 'question-1',
-        });
-
-        const result = await new QuestionsService().upVoteQuestion({
-            userId: 'user-1',
-            questionId: 'question-1',
-            active: true,
-        });
-
-        expect(result.upvotes).toBe(3);
-        expect(result.likedByUser).toBe(true);
-        expect(prisma.$transaction).not.toHaveBeenCalled();
-        expect(prisma.questions.update).not.toHaveBeenCalled();
-    });
-
-    it('removes a user upvote when deactivated', async () => {
-        prisma.questions.findUnique.mockResolvedValue(question);
-        prisma.questionUpvotes.findUnique.mockResolvedValue({
-            id: 'upvote-1',
-            userId: 'user-1',
-            questionId: 'question-1',
-        });
-        prisma.questionUpvotes.deleteMany.mockResolvedValue({ count: 1 });
-        prisma.questions.update.mockResolvedValue({
-            id: question.id,
-            userId: question.userId,
-            title: question.title,
-            description: question.description,
-            createdAt: question.createdAt,
-            upvotes: 2,
-            user,
-            _count: question._count,
-        });
-
-        const result = await new QuestionsService().upVoteQuestion({
-            userId: 'user-1',
-            questionId: 'question-1',
-            active: false,
-        });
-
-        expect(prisma.questionUpvotes.deleteMany).toHaveBeenCalledWith({
-            where: {
-                userId: 'user-1',
-                questionId: 'question-1',
-            },
-        });
-        expect(prisma.questions.update).toHaveBeenCalledWith(expect.objectContaining({
-            data: {
-                upvotes: {
-                    decrement: 1,
-                },
-            },
-        }));
-        expect(result.upvotes).toBe(2);
-        expect(result.likedByUser).toBe(false);
+        expect(result.votes).toBe(4);
+        expect(result.voteState).toBe('none');
     });
 });

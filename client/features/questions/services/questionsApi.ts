@@ -4,6 +4,7 @@ import type {
     PaginatedData,
     QuestionData,
     QuestionWithCommentsData,
+    VoteState,
 } from '../../../types.ts';
 import { apiRequest } from '../../../utils/apiRequest.ts';
 
@@ -41,17 +42,17 @@ export function createQuestion(
     });
 }
 
-export function upvoteQuestion(questionId: string, active: boolean): Promise<QuestionData> {
-    return apiRequest<QuestionData>(`/questions/${questionId}/upvotes`, {
+export function setQuestionVote(questionId: string, vote: VoteState): Promise<QuestionData> {
+    return apiRequest<QuestionData>(`/questions/${questionId}/votes`, {
         method: 'POST',
-        body: JSON.stringify({ active }),
+        body: JSON.stringify({ vote }),
     });
 }
 
-export function upvoteComment(commentId: string, active: boolean): Promise<CommentData> {
-    return apiRequest<CommentData>(`/comments/${commentId}/upvotes`, {
+export function setCommentVote(commentId: string, vote: VoteState): Promise<CommentData> {
+    return apiRequest<CommentData>(`/comments/${commentId}/votes`, {
         method: 'POST',
-        body: JSON.stringify({ active }),
+        body: JSON.stringify({ vote }),
     });
 }
 

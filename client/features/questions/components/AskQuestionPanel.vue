@@ -45,19 +45,27 @@ function updateImage(event: Event): void {
 <template>
     <div class="ask-panel">
         <div class="ask-panel-body">
+            <section class="ask-panel-tip" aria-label="Tips for getting good answers quickly">
+                <h3>Tips on getting good answers quickly</h3>
+                <ul>
+                    <li>Make sure your question has not been asked already</li>
+                    <li>Keep your question short and to the point</li>
+                    <li>Double-check grammar and spelling</li>
+                </ul>
+            </section>
+
             <form class="ask-panel-form" @submit.prevent="submit">
                 <input
                     v-model="title"
                     class="ask-panel-title"
-                    placeholder="Why is the sky blue?"
+                    placeholder='Start your question with "What", "How", "Why", etc.'
                     required
                 >
                 <textarea
                     v-model="description"
                     class="ask-panel-description"
-                    placeholder="Add the details here..."
+                    placeholder=""
                     rows="8"
-                    required
                 />
 
                 <label class="ask-panel-image-picker">

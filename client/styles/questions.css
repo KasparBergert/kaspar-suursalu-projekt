@@ -129,6 +129,25 @@
     font-size: 14px;
 }
 
+.vote-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 32px;
+    padding: 2px 6px;
+    border: 1px solid var(--border-strong-color);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.vote-pill-count {
+    min-width: 34px;
+    color: var(--text-color);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
 .card-menu,
 .dismiss-x {
     display: inline-grid;
@@ -286,17 +305,12 @@
     margin: 6px 0 0;
 }
 
-.comment-vote-button {
-    min-height: 28px;
+.comment-vote-pill {
     margin-top: 14px;
-    padding: 4px 8px;
-    gap: 5px;
-    font-size: 12px;
 }
 
-.comment-vote-button .action-icon {
-    width: 14px;
-    height: 14px;
+.comment-vote-pill .vote-pill-count {
+    min-width: 28px;
 }
 
 .comment-avatar {

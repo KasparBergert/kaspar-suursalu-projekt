@@ -177,7 +177,7 @@ export class AuthService {
 
     private createPasswordResetUrl(token: string): string {
         const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:3000/api';
-
+        
         return `${backendUrl}/auth/password-resets/${encodeURIComponent(token)}/redirect`;
     }
 }

@@ -56,10 +56,11 @@ async function seedDatabase(): Promise<void> {
         const createdQuestion = getSeedQuestion(questionByKey, question.key);
 
         for (const email of question.upvoteEmails) {
-            await prisma.questionUpvotes.create({
+            await prisma.questionVotes.create({
                 data: {
                     userId: getSeedUser(userByEmail, email).id,
                     questionId: createdQuestion.id,
+                    isUpvote: true,
                 },
             });
         }
@@ -69,7 +70,7 @@ async function seedDatabase(): Promise<void> {
                 id: createdQuestion.id,
             },
             data: {
-                upvotes: question.upvoteEmails.length,
+                votes: question.upvoteEmails.length,
             },
         });
     }
@@ -89,8 +90,8 @@ async function readSeedImage(questionKey: string): Promise<Uint8Array<ArrayBuffe
 
 async function clearDatabase(): Promise<void> {
     await prisma.pendingPasswordReset.deleteMany({});
-    await prisma.commentUpvotes.deleteMany({});
-    await prisma.questionUpvotes.deleteMany({});
+    await prisma.commentVotes.deleteMany({});
+    await prisma.questionVotes.deleteMany({});
     await prisma.comments.deleteMany({});
     await prisma.questions.deleteMany({});
     await prisma.users.deleteMany({});
