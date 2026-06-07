@@ -34,7 +34,17 @@ FRONTEND_URL=http://localhost:5173
 BACKEND_URL=http://localhost:3000/api
 ```
 
-For a real SMTP provider, also set `SMTP_USER` and `SMTP_PASS`, and use the provider's host, port, and sender address.
+To run Mailpit locally, pull the Mailpit image and start the container with the ports mapped to the same ports on your machine:
+
+```bash
+docker pull axllent/mailpit
+docker run --rm \
+  -p 1025:1025 \
+  -p 8025:8025 \
+  axllent/mailpit
+```
+
+This keeps the SMTP port on `1025` and the Mailpit web UI on `8025`, which matches the default development settings in this project.
 
 `BACKEND_URL` is used to build the link in the email. That backend link validates the token, stores it in a short-lived HttpOnly cookie, then redirects the user to `FRONTEND_URL/password-reset`.
 

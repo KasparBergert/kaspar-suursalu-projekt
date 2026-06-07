@@ -16,6 +16,8 @@ model Users {
     comments      Comments[]
     questionVotes QuestionVotes[]
     commentVotes  CommentVotes[]
+
+    @@map("users")
 }
 
 model Questions {
@@ -25,10 +27,12 @@ model Questions {
     description String
     imageData   Bytes?
     createdAt   DateTime        @default(now())
-    votes       Int             @default(0)
+    votes       Int             @default(0) @map("upvotes")
     comments    Comments[]
     votedBy     QuestionVotes[]
     user        Users           @relation(fields: [userId], references: [id])
+
+    @@map("questions")
 }
 
 model Comments {
@@ -37,10 +41,12 @@ model Comments {
     userId     String
     text       String
     createdAt  DateTime       @default(now())
-    votes      Int            @default(0)
+    votes      Int            @default(0) @map("upvotes")
     question   Questions      @relation(fields: [questionId], references: [id])
     user       Users          @relation(fields: [userId], references: [id])
     votedBy    CommentVotes[]
+
+    @@map("comments")
 }
 
 model QuestionVotes {
@@ -53,6 +59,7 @@ model QuestionVotes {
     question   Questions @relation(fields: [questionId], references: [id])
 
     @@unique([userId, questionId])
+    @@map("questionupvotes")
 }
 
 model CommentVotes {
@@ -65,6 +72,7 @@ model CommentVotes {
     comment   Comments @relation(fields: [commentId], references: [id])
 
     @@unique([userId, commentId])
+    @@map("commentupvotes")
 }
 
 model PendingPasswordReset {
@@ -73,4 +81,6 @@ model PendingPasswordReset {
     token     String   @unique
     createdAt DateTime @default(now())
     expiresAt DateTime
+
+    @@map("pendingpasswordreset")
 }

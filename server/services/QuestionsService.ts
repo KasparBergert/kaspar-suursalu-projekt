@@ -71,20 +71,35 @@ export class QuestionsService {
                     {
                         title: {
                             contains: search,
-                            mode: 'insensitive' as const,
                         },
                     },
                     {
                         description: {
                             contains: search,
-                            mode: 'insensitive' as const,
                         },
                     },
                     {
                         user: {
                             name: {
                                 contains: search,
-                                mode: 'insensitive' as const,
+                            },
+                        },
+                    },
+                    {
+                        user: {
+                            is: {
+                                email: {
+                                    contains: search,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        comments: {
+                            some: {
+                                text: {
+                                    contains: search,
+                                },
                             },
                         },
                     },

@@ -9,8 +9,8 @@ let server: Server;
 let baseUrl: string;
 
 async function clearDatabase(): Promise<void> {
-    await prisma.commentUpvotes.deleteMany({});
-    await prisma.questionUpvotes.deleteMany({});
+    await prisma.commentVotes.deleteMany({});
+    await prisma.questionVotes.deleteMany({});
     await prisma.pendingPasswordReset.deleteMany({});
     await prisma.comments.deleteMany({});
     await prisma.questions.deleteMany({});
@@ -107,7 +107,7 @@ describe('Questions API integration', () => {
                 userId: user.id,
                 title: 'Can the feed load real questions?',
                 description: 'The API should return database questions to the frontend.',
-                upvotes: 2,
+                votes: 2,
             },
         });
         await prisma.comments.create({
@@ -133,7 +133,7 @@ describe('Questions API integration', () => {
                     id: question.id,
                     title: 'Can the feed load real questions?',
                     description: 'The API should return database questions to the frontend.',
-                    upvotes: 2,
+                    votes: 2,
                     commentCount: 1,
                     user: {
                         id: user.id,
@@ -145,6 +145,91 @@ describe('Questions API integration', () => {
             limit: 10,
             total: 1,
             totalPages: 1,
+        });
+    });
+
+    it('searches questions by author email through the endpoint', async () => {
+        const user = await prisma.users.create({
+            data: {
+                name: 'Kaspar Berg',
+                email: 'kaspar.berg@example.com',
+                password: 'hashed-password',
+            },
+        });
+        const question = await prisma.questions.create({
+            data: {
+                userId: user.id,
+                title: 'A question that should be found by author email',
+                description: 'Search should match the author email field too.',
+                votes: 4,
+            },
+        });
+
+        const response = await fetch(`${baseUrl}/api/questions?search=kasp`);
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body).toMatchObject({
+            data: [
+                {
+                    id: question.id,
+                    title: 'A question that should be found by author email',
+                    votes: 4,
+                    user: {
+                        id: user.id,
+                        name: 'Kaspar Berg',
+                    },
+                },
+            ],
+            page: 1,
+            limit: 10,
+            total: 1,
+            totalPages: 1,
+        });
+    });
+
+    it('searches questions by title, description, and comment text through the endpoint', async () => {
+        const user = await prisma.users.create({
+            data: {
+                name: 'Question Searcher',
+                email: `searcher-${crypto.randomUUID()}@example.com`,
+                password: 'hashed-password',
+            },
+        });
+        const question = await prisma.questions.create({
+            data: {
+                userId: user.id,
+                title: 'How do I find my question again?',
+                description: 'This description should also be searchable.',
+                votes: 1,
+            },
+        });
+        await prisma.comments.create({
+            data: {
+                userId: user.id,
+                questionId: question.id,
+                text: 'A comment containing searchable text.',
+            },
+        });
+
+        const response = await fetch(`${baseUrl}/api/questions?search=searchable`);
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body).toMatchObject({
+            data: [
+                {
+                    id: question.id,
+                    title: 'How do I find my question again?',
+                    description: 'This description should also be searchable.',
+                    votes: 1,
+                    user: {
+                        id: user.id,
+                        name: 'Question Searcher',
+                    },
+                },
+            ],
+            total: 1,
         });
     });
 
@@ -166,13 +251,14 @@ describe('Questions API integration', () => {
                 userId: user.id,
                 title: 'Does the API tell me I already liked this?',
                 description: 'The feed should include the current user like state.',
-                upvotes: 1,
+                votes: 1,
             },
         });
-        await prisma.questionUpvotes.create({
+        await prisma.questionVotes.create({
             data: {
                 userId: user.id,
                 questionId: question.id,
+                isUpvote: true,
             },
         });
 
@@ -186,7 +272,7 @@ describe('Questions API integration', () => {
         expect(response.status).toBe(200);
         expect(body.data[0]).toMatchObject({
             id: question.id,
-            likedByUser: true,
+            voteState: 'up',
         });
     });
 
@@ -208,13 +294,14 @@ describe('Questions API integration', () => {
                 userId: user.id,
                 title: 'Can cookie auth mark my liked questions?',
                 description: 'The browser sends this after refresh.',
-                upvotes: 1,
+                votes: 1,
             },
         });
-        await prisma.questionUpvotes.create({
+        await prisma.questionVotes.create({
             data: {
                 userId: user.id,
                 questionId: question.id,
+                isUpvote: true,
             },
         });
 
@@ -228,7 +315,7 @@ describe('Questions API integration', () => {
         expect(response.status).toBe(200);
         expect(body.data[0]).toMatchObject({
             id: question.id,
-            likedByUser: true,
+            voteState: 'up',
         });
     });
 
@@ -260,14 +347,14 @@ describe('Questions API integration', () => {
             },
         });
 
-        const response = await fetch(`${baseUrl}/api/comments/${comment.id}/upvotes`, {
+        const response = await fetch(`${baseUrl}/api/comments/${comment.id}/votes`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                active: true,
+                vote: 'up',
             }),
         });
         const body = await response.json();
@@ -276,7 +363,7 @@ describe('Questions API integration', () => {
                 id: comment.id,
             },
         });
-        const storedUpvote = await prisma.commentUpvotes.findUnique({
+        const storedUpvote = await prisma.commentVotes.findUnique({
             where: {
                 userId_commentId: {
                     userId: user.id,
@@ -288,10 +375,10 @@ describe('Questions API integration', () => {
         expect(response.status).toBe(200);
         expect(body).toMatchObject({
             id: comment.id,
-            upvotes: 1,
-            likedByUser: true,
+            votes: 1,
+            voteState: 'up',
         });
-        expect(storedComment?.upvotes).toBe(1);
+        expect(storedComment?.votes).toBe(1);
         expect(storedUpvote).toMatchObject({
             userId: user.id,
             commentId: comment.id,
